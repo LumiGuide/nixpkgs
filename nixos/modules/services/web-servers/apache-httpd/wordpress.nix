@@ -5,7 +5,7 @@ with lib;
 
 let
 
-  version = "4.3.1";
+  version = "4.4.2";
   fullversion = "${version}";
 
   # Our bare-bones wp-config.php file using the above settings
@@ -74,7 +74,7 @@ let
       owner = "WordPress";
       repo = "WordPress";
       rev = "${fullversion}";
-      sha256 = "1rk10vcv4z9p04hfzc0wkbilrgx7m9ssyr6c3w6vw3vl1bcgqxza";
+      sha256 = "05m4cncnf4xzzb3fl540b66s7nxnjhfgnzn6pppvq3r32rw214nc";
     };
     installPhase = ''
       mkdir -p $out
