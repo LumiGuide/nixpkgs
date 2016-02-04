@@ -51,6 +51,7 @@ let
     de_DE = { revision="4f880c8f608c2d2123a2b8d70979dd8832d3f776"; sha256="0di5q0pa9w4qkgzf9d8j4gm4mdkal7gd7cb91jcyjkcc3mqbi813"; };
     zh_CN = { revision="86880820d2b9ec13ec3140e8494bd62be2bb6edb"; sha256="00rh4igjqrrhwn94lg5h38n1j278byzg9scb451kn6ixm3l7vg6h"; };
     fr_FR = { revision="22667a45cf44864f2c877d71e6db0cbc52d384d9"; sha256="1ynnflajia2pg2gd7p7ssqjyz3wcj5dnf3sr94p0d9jx18nh806p"; };
+    nl_NL = { revision="ca146592f687a27493202292cfe735c839dcf4a2"; sha256="0xvysgxd8a3bpbq07l4wcx24lry0lg5rx0rd6r0my2clhm0fjxcl"; };
   };
 
   downloadLanguagePack = language: revision: sha256s:
