@@ -47,10 +47,10 @@ let
   # WP translation can be found here:
   #   https://github.com/nixcloud/wordpress-translations
   supportedLanguages = {
-    en_GB = { revision="d6c005372a5318fd758b710b77a800c86518be13"; sha256="0qbbsi87k47q4rgczxx541xz4z4f4fr49hw4lnaxkdsf5maz8p9p"; };
-    de_DE = { revision="3c62955c27baaae98fd99feb35593d46562f4736"; sha256="1shndgd11dk836dakrjlg2arwv08vqx6j4xjh4jshvwmjab6ng6p"; };
-    zh_ZN = { revision="12b9f811e8cae4b6ee41de343d35deb0a8fdda6d"; sha256="1339ggsxh0g6lab37jmfxicsax4h702rc3fsvv5azs7mcznvwh47"; };
-    fr_FR = { revision="688c8b1543e3d38d9e8f57e0a6f2a2c3c8b588bd"; sha256="1j41iak0i6k7a4wzyav0yrllkdjjskvs45w53db8vfm8phq1n014"; };
+    en_GB = { revision="7de394e1341ab74c6f6626af5cebe7c30e653c79"; sha256="014qk8zcnkw7v3cs96pyxq41sb5ragbq2hhazrfd7jry5j9v56vp"; };
+    de_DE = { revision="4f880c8f608c2d2123a2b8d70979dd8832d3f776"; sha256="0di5q0pa9w4qkgzf9d8j4gm4mdkal7gd7cb91jcyjkcc3mqbi813"; };
+    zh_CN = { revision="86880820d2b9ec13ec3140e8494bd62be2bb6edb"; sha256="00rh4igjqrrhwn94lg5h38n1j278byzg9scb451kn6ixm3l7vg6h"; };
+    fr_FR = { revision="22667a45cf44864f2c877d71e6db0cbc52d384d9"; sha256="1ynnflajia2pg2gd7p7ssqjyz3wcj5dnf3sr94p0d9jx18nh806p"; };
   };
 
   downloadLanguagePack = language: revision: sha256s:
