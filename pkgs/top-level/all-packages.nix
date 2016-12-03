@@ -17236,6 +17236,9 @@ in
 
   pgadmin = callPackage ../applications/misc/pgadmin { };
 
+  # pgadmin4-web = callPackage ../applications/misc/pgadmin4 { };
+  pgadmin4-desktop = qt55.callPackage ../applications/misc/pgadmin4/desktop.nix { };
+
   pgf = pgf2;
 
   # Keep the old PGF since some documents don't render properly with
