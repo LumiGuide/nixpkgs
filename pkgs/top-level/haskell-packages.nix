@@ -1,14 +1,19 @@
 { pkgs, callPackage, stdenv, buildPlatform, targetPlatform }:
 
-let # These are the GHC versions that support building with integer-simple.
-    integerSimpleGhcNames = [
-      "ghc722"
-      "ghc742"
-      "ghc763"
-      "ghc783" "ghc784"
-      "ghc7102" "ghc7103"
-      "ghc801" "ghc802"
-      "ghcHEAD"
+let # These are attributes in compiler and packages that don't support integer-simple.
+    integerSimpleExcludes = [
+      "ghc6102Binary"
+      "ghc704Binary"
+      "ghc742Binary"
+      "ghc6104"
+      "ghc6123"
+      "ghc704"
+      "ghcjs"
+      "ghcjsHEAD"
+      "ghcCross"
+      "jhc"
+      "uhc"
+      "integer-simple"
     ];
 in rec {
 
@@ -85,9 +90,12 @@ in rec {
     });
 
     # The integer-simple attribute set contains all the GHC compilers
-    # in integerSimpleGhcNames build with integer-simple instead of integer-gmp.
+    # build with integer-simple instead of integer-gmp.
     integer-simple =
-      let integerSimpleGhcs = pkgs.lib.genAttrs integerSimpleGhcNames
+      let integerSimpleGhcNames =
+            pkgs.lib.filter (name: ! builtins.elem name integerSimpleExcludes)
+                            (pkgs.lib.attrNames compiler);
+          integerSimpleGhcs = pkgs.lib.genAttrs integerSimpleGhcNames
                                 (name: compiler."${name}".override { enableIntegerSimple = true; });
       in integerSimpleGhcs // {
            ghcHEAD = integerSimpleGhcs.ghcHEAD.override { selfPkgs = packages.integer-simple.ghcHEAD; };
@@ -161,8 +169,12 @@ in rec {
     };
 
     # The integer-simple attribute set contains package sets for all the GHC compilers
-    # in integerSimpleGhcNames using integer-simple instead of integer-gmp.
-    integer-simple = pkgs.lib.genAttrs integerSimpleGhcNames (name: packages."${name}".override {
+    # using integer-simple instead of integer-gmp.
+    integer-simple =
+      let integerSimpleGhcNames =
+            pkgs.lib.filter (name: ! builtins.elem name integerSimpleExcludes)
+                            (pkgs.lib.attrNames packages);
+      in pkgs.lib.genAttrs integerSimpleGhcNames (name: packages."${name}".override {
        ghc = compiler.integer-simple."${name}";
        overrides = _self : _super : {
          integer-simple = null;
