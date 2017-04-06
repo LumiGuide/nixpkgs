@@ -16,6 +16,7 @@
 , withBenchmarkDepends ? false
 , doHoogle ? true
 , editedCabalFile ? null
+, enableGoldLinker ? false
 , enableLibraryProfiling ? false
 , enableExecutableProfiling ? false
 # TODO enable shared libs for cross-compiling
@@ -106,6 +107,8 @@ let
   crossCabalFlagsString =
     stdenv.lib.optionalString isCross (" " + stdenv.lib.concatStringsSep " " crossCabalFlags);
 
+  linkWithGold = enableGoldLinker && versionOlder "7.8" ghc.version;
+
   defaultConfigureFlags = [
     "--verbose" "--prefix=$out" "--libdir=\\$prefix/lib/\\$compiler" "--libsubdir=\\$pkgid"
     "--with-gcc=$CC" # Clang won't work without that extra information.
@@ -122,6 +125,7 @@ let
     (optionalString (isGhcjs || versionOlder "7" ghc.version) (enableFeature enableStaticLibraries "library-vanilla"))
     (optionalString (isGhcjs || versionOlder "7.4" ghc.version) (enableFeature enableSharedExecutables "executable-dynamic"))
     (optionalString (isGhcjs || versionOlder "7" ghc.version) (enableFeature doCheck "tests"))
+    (optionalString linkWithGold "--ghc-option=-optl-fuse-ld=gold --ld-option=-fuse-ld=gold --with-ld=ld.gold")
   ] ++ optionals (enableDeadCodeElimination && (stdenv.lib.versionOlder "8.0.1" ghc.version)) [
      "--ghc-option=-split-sections"
   ] ++ optionals isGhcjs [
@@ -368,4 +372,5 @@ stdenv.mkDerivation ({
 // optionalAttrs (dontStrip)            { inherit dontStrip; }
 // optionalAttrs (hardeningDisable != []) { inherit hardeningDisable; }
 // optionalAttrs (stdenv.isLinux)       { LOCALE_ARCHIVE = "${glibcLocales}/lib/locale/locale-archive"; }
+// optionalAttrs linkWithGold           { NIX_CFLAGS_LINK = "-fuse-ld=gold"; }
 )

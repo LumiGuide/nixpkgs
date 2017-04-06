@@ -26,6 +26,9 @@ rec {
   appendConfigureFlag = drv: x: overrideCabal drv (drv: { configureFlags = (drv.configureFlags or []) ++ [x]; });
   removeConfigureFlag = drv: x: overrideCabal drv (drv: { configureFlags = pkgs.stdenv.lib.remove x (drv.configureFlags or []); });
 
+  enableGoldLinker = drv: overrideCabal drv (drv: { enableGoldLinker = true; });
+  disableGoldLinker = drv: overrideCabal drv (drv: { enableGoldLinker = false; });
+
   addBuildTool = drv: x: addBuildTools drv [x];
   addBuildTools = drv: xs: overrideCabal drv (drv: { buildTools = (drv.buildTools or []) ++ xs; });
 
