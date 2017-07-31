@@ -1,0 +1,23 @@
+diff -ur a/configure b/configure
+--- a/configure	1970-01-01 01:00:01.000000000 +0100
++++ b/configure	2017-07-30 17:49:37.246421154 +0200
+@@ -1,6 +1,5 @@
+ #!/bin/sh
+ 
+-( cd postage && ./configure )
++( cd postage && ./configure $@)
+ 
+ cp Makefile.in Makefile
+-
+diff -ur a/postage/Makefile.in b/postage/Makefile.in
+--- a/postage/Makefile.in	1970-01-01 01:00:01.000000000 +0100
++++ b/postage/Makefile.in	2017-07-30 17:51:11.426517665 +0200
+@@ -80,7 +80,7 @@
+ 	test -f @prefix@/etc/$(BINARY)/$(BINARY)-connections.conf || install config/$(BINARY)-connections.conf @prefix@/etc/$(BINARY)/$(BINARY)-connections.conf;
+ 
+ install: $(INSTALL_DEPS)
+-	mkdir -p @prefix@/etc/$(BINARY)/web_root/$(BINARY)
++	mkdir -p @prefix@/etc/$(BINARY)/web_root/$(BINARY) @prefix@/sbin @prefix@/@MANDIR@/man1
+ 	cp -rf ./web_root/$(BINARY)/* @prefix@/etc/$(BINARY)/web_root/$(BINARY)/
+ 	install config/$(BINARY).conf @prefix@/etc/$(BINARY)/$(BINARY).conf.example
+ 	install config/$(BINARY)-connections.conf @prefix@/etc/$(BINARY)/$(BINARY)-connections.conf.example
