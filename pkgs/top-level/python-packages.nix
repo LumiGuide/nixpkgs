@@ -8286,16 +8286,6 @@ in {
 
   django_tagging = callPackage ../development/python-modules/django_tagging { };
 
-  django_tagging_0_4_3 = self.django_tagging.overrideAttrs (attrs: rec {
-    name = "django-tagging-0.4.3";
-
-    src = pkgs.fetchurl {
-      url = "mirror://pypi/d/django-tagging/${name}.tar.gz";
-      sha256 = "0617azpmp6jpg3d88v2ir97qrc9aqcs2s9gyvv9bgf2cp55khxhs";
-    };
-    propagatedBuildInputs = with self; [ django_1_8 ];
-  });
-
   django_classytags = buildPythonPackage rec {
     name = "django-classy-tags-${version}";
     version = "0.6.1";
@@ -23744,7 +23734,18 @@ EOF
       sha256 = "0q8bwlj75jqyzmazfsi5sa26xl58ssa8wdxm2l4j0jqyn8xpfnmc";
     };
 
-    propagatedBuildInputs = with self; [
+    propagatedBuildInputs = with self;
+      let django_tagging_0_4_3 = django_tagging.overrideAttrs (_attrs: rec {
+            name = "django-tagging-0.4.3";
+
+            src = pkgs.fetchurl {
+              url = "mirror://pypi/d/django-tagging/${name}.tar.gz";
+              sha256 = "0617azpmp6jpg3d88v2ir97qrc9aqcs2s9gyvv9bgf2cp55khxhs";
+            };
+
+            propagatedBuildInputs = [ django_1_8 ];
+          });
+      in [
       django_1_8 django_tagging_0_4_3 whisper pycairo cairocffi
       ldap memcached pytz urllib3 scandir
     ];
