@@ -55,11 +55,11 @@ let
     } + "/ippicv";
     files = let name = platform : "ippicv_2017u2_${platform}_20170418.tgz"; in
       if stdenv.system == "x86_64-linux" then
-      [ [ (name "lnx_intel64") "87cbdeb627415d8e4bc811156289fa3a" ] ]
+      { ${(name "lnx_intel64")} = "87cbdeb627415d8e4bc811156289fa3a"; }
       else if stdenv.system == "i686-linux" then
-      [ [ (name "lnx_ia32")    "f2cece00d802d4dea86df52ed095257e" ] ]
+      { ${(name "lnx_ia32")}    = "f2cece00d802d4dea86df52ed095257e"; }
       else if stdenv.system == "x86_64-darwin" then
-      [ [ (name "mac_intel64") "0c25953c99dbb499ff502485a9356d8d" ] ]
+      { ${(name "mac_intel64")} = "0c25953c99dbb499ff502485a9356d8d"; }
       else
       throw "ICV is not available for this platform (or not yet supported by this package)";
     dst = ".cache/ippicv";
@@ -73,12 +73,12 @@ let
       rev    = "fccf7cd6a4b12079f73bbfb21745f9babcd4eb1d";
       sha256 = "0r9fam8dplyqqsd3qgpnnfgf9l7lj44di19rxwbm8mxiw0rlcdvy";
     };
-    files = [
-      [ "vgg_generated_48.i"  "e8d0dcd54d1bcfdc29203d011a797179" ]
-      [ "vgg_generated_64.i"  "7126a5d9a8884ebca5aea5d63d677225" ]
-      [ "vgg_generated_80.i"  "7cd47228edec52b6d82f46511af325c5" ]
-      [ "vgg_generated_120.i" "151805e03568c9f490a5e3a872777b75" ]
-    ];
+    files = {
+      "vgg_generated_48.i"  = "e8d0dcd54d1bcfdc29203d011a797179";
+      "vgg_generated_64.i"  = "7126a5d9a8884ebca5aea5d63d677225";
+      "vgg_generated_80.i"  = "7cd47228edec52b6d82f46511af325c5";
+      "vgg_generated_120.i" = "151805e03568c9f490a5e3a872777b75";
+    };
     dst = ".cache/xfeatures2d/vgg";
   };
 
@@ -90,30 +90,33 @@ let
       rev    = "34e4206aef44d50e6bbcd0ab06354b52e7466d26";
       sha256 = "13yig1xhvgghvxspxmdidss5lqiikpjr0ddm83jsi0k85j92sn62";
     };
-    files = [
-      [ "boostdesc_bgm.i"           "0ea90e7a8f3f7876d450e4149c97c74f" ]
-      [ "boostdesc_bgm_bi.i"        "232c966b13651bd0e46a1497b0852191" ]
-      [ "boostdesc_bgm_hd.i"        "324426a24fa56ad9c5b8e3e0b3e5303e" ]
-      [ "boostdesc_binboost_064.i"  "202e1b3e9fec871b04da31f7f016679f" ]
-      [ "boostdesc_binboost_128.i"  "98ea99d399965c03d555cef3ea502a0b" ]
-      [ "boostdesc_binboost_256.i"  "e6dcfa9f647779eb1ce446a8d759b6ea" ]
-      [ "boostdesc_lbgm.i"          "0ae0675534aa318d9668f2a179c2a052" ]
-    ];
+    files = {
+      "boostdesc_bgm.i"          = "0ea90e7a8f3f7876d450e4149c97c74f";
+      "boostdesc_bgm_bi.i"       = "232c966b13651bd0e46a1497b0852191";
+      "boostdesc_bgm_hd.i"       = "324426a24fa56ad9c5b8e3e0b3e5303e";
+      "boostdesc_binboost_064.i" = "202e1b3e9fec871b04da31f7f016679f";
+      "boostdesc_binboost_128.i" = "98ea99d399965c03d555cef3ea502a0b";
+      "boostdesc_binboost_256.i" = "e6dcfa9f647779eb1ce446a8d759b6ea";
+      "boostdesc_lbgm.i"         = "0ae0675534aa318d9668f2a179c2a052";
+    };
     dst = ".cache/xfeatures2d/boostdesc";
   };
 
   installExtraFiles = extra : with lib; ''
     mkdir -p "${extra.dst}"
-  '' + concatMapStrings (file :
-    let name = head file; md5 = last file; in ''
+  '' + concatStrings (mapAttrsToList (name : md5 : ''
     ln -s "${extra.src}/${name}" "${extra.dst}/${md5}-${name}"
-  '') extra.files;
+  '') extra.files);
 
   # See opencv_contrib/modules/dnn_modern/CMakeLists.txt
-  tinyDnnName = "v1.0.0a3.tar.gz";
-  tinyDnn = fetchurl {
-    url    = "https://github.com/tiny-dnn/tiny-dnn/archive/${tinyDnnName}";
-    sha256 = "12x1b984cn0psn6kz1fy75zljgzqvkdyjy8i292adfnyqpl1rip2";
+  tinyDnn = rec {
+    src = fetchurl {
+      url    = "https://github.com/tiny-dnn/tiny-dnn/archive/${name}";
+      sha256 = "12x1b984cn0psn6kz1fy75zljgzqvkdyjy8i292adfnyqpl1rip2";
+    };
+    name = "v1.0.0a3.tar.gz";
+    md5  = "adb1c512e09ca2c7a6faef36f9c53e59";
+    dst  = ".cache/tiny_dnn";
   };
 
   opencvFlag = name: enabled: "-DWITH_${name}=${if enabled then "ON" else "OFF"}";
@@ -145,10 +148,8 @@ stdenv.mkDerivation rec {
       ${installExtraFiles vgg}
       ${installExtraFiles boostdesc}
 
-      # See opencv_contrib/modules/dnn_modern/CMakeLists.txt
-      tinyDnnDir=".cache/tiny_dnn"
-      mkdir -p "$tinyDnnDir"
-      ln -s "${tinyDnn}" "$tinyDnnDir/adb1c512e09ca2c7a6faef36f9c53e59-${tinyDnnName}"
+      mkdir -p "${tinyDnn.dst}"
+      ln -s "${tinyDnn.src}" "${tinyDnn.dst}/${tinyDnn.md5}-${tinyDnn.name}"
     '');
 
   buildInputs =
