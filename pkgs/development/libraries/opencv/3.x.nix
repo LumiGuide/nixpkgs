@@ -1,6 +1,7 @@
 { lib, stdenv
 , fetchurl, fetchFromGitHub
 , cmake, pkgconfig, unzip, zlib, pcre, hdf5
+, config
 
 , enableJPEG      ? true, libjpeg
 , enablePNG       ? true, libpng
@@ -8,17 +9,18 @@
 , enableWebP      ? true, libwebp
 , enableEXR ? (!stdenv.isDarwin), openexr, ilmbase
 , enableJPEG2K    ? true, jasper
+, enableEigen     ? true, eigen
+, enableOpenblas  ? true, openblas
+
+, enableCuda      ? (config.cudaSupport or false), cudatoolkit
 
 , enableIpp       ? false
-, enableContrib   ? false, protobuf3_1
+, enableContrib   ? false, protobuf3_1, caffe, glog, boost, google-gflags
 , enablePython    ? false, pythonPackages
 , enableGtk2      ? false, gtk2
 , enableGtk3      ? false, gtk3
 , enableFfmpeg    ? false, ffmpeg
 , enableGStreamer ? false, gst_all_1
-, enableEigen     ? true, eigen
-, enableOpenblas  ? true, openblas
-, enableCuda      ? false, cudatoolkit
 , enableTesseract ? false, tesseract, leptonica
 , enableDocs      ? false, doxygen, graphviz-nox
 
@@ -120,6 +122,8 @@ let
   };
 
   opencvFlag = name: enabled: "-DWITH_${name}=${if enabled then "ON" else "OFF"}";
+
+  caffe_protobuf3_1 = caffe.override { protobuf = protobuf3_1; };
 in
 
 stdenv.mkDerivation rec {
@@ -172,7 +176,7 @@ stdenv.mkDerivation rec {
     # tesseract & leptonica.
     ++ lib.optionals enableTesseract [ tesseract leptonica ]
     ++ lib.optional enableCuda cudatoolkit
-    ++ lib.optional buildContrib protobuf3_1
+    ++ lib.optionals buildContrib [ protobuf3_1 caffe_protobuf3_1 glog boost google-gflags ]
     ++ lib.optionals stdenv.isDarwin [ AVFoundation Cocoa QTKit ]
     ++ lib.optionals enableDocs [ doxygen graphviz-nox ];
 
@@ -195,7 +199,10 @@ stdenv.mkDerivation rec {
   ] ++ lib.optionals enableCuda [
     "-DCUDA_FAST_MATH=ON"
     "-DCUDA_HOST_COMPILER=${cudatoolkit.cc}/bin/gcc"
-  ] ++ lib.optional buildContrib "-DBUILD_PROTOBUF=OFF"
+  ] ++ lib.optionals buildContrib [
+         "-DBUILD_PROTOBUF=OFF"
+         "-DBUILD_opencv_cnn_3dobj=OFF" # the cnn_3dobj module fails to build
+       ]
     ++ lib.optionals stdenv.isDarwin ["-DWITH_OPENCL=OFF" "-DWITH_LAPACK=OFF"]
 
     # The tiny-dnn-1.0.0a3 dependency of the dnn_modern module fails to build on OS X so we disable it for now.
