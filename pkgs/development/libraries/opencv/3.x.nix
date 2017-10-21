@@ -10,7 +10,7 @@
 , enableJPEG2K    ? true, jasper
 
 , enableIpp       ? false
-, enableContrib   ? false
+, enableContrib   ? false, protobuf3_1
 , enablePython    ? false, pythonPackages
 , enableGtk2      ? false, gtk2
 , enableGtk3      ? false, gtk3
@@ -172,6 +172,7 @@ stdenv.mkDerivation rec {
     # tesseract & leptonica.
     ++ lib.optionals enableTesseract [ tesseract leptonica ]
     ++ lib.optional enableCuda cudatoolkit
+    ++ lib.optional buildContrib protobuf3_1
     ++ lib.optionals stdenv.isDarwin [ AVFoundation Cocoa QTKit ]
     ++ lib.optionals enableDocs [ doxygen graphviz-nox ];
 
@@ -194,7 +195,8 @@ stdenv.mkDerivation rec {
   ] ++ lib.optionals enableCuda [
     "-DCUDA_FAST_MATH=ON"
     "-DCUDA_HOST_COMPILER=${cudatoolkit.cc}/bin/gcc"
-  ] ++ lib.optionals stdenv.isDarwin ["-DWITH_OPENCL=OFF" "-DWITH_LAPACK=OFF"]
+  ] ++ lib.optional buildContrib "-DBUILD_PROTOBUF=OFF"
+    ++ lib.optionals stdenv.isDarwin ["-DWITH_OPENCL=OFF" "-DWITH_LAPACK=OFF"]
 
     # The tiny-dnn-1.0.0a3 dependency of the dnn_modern module fails to build on OS X so we disable it for now.
     ++ lib.optional (stdenv.isDarwin && buildContrib) "-DBUILD_opencv_dnn_modern=OFF";
