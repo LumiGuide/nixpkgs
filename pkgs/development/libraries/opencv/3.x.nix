@@ -1,6 +1,6 @@
 { lib, stdenv
 , fetchurl, fetchFromGitHub
-, cmake, pkgconfig, unzip, zlib, pcre, hdf5
+, cmake, pkgconfig, unzip, zlib, pcre, hdf5, protobuf
 , config
 
 , enableJPEG      ? true, libjpeg
@@ -15,7 +15,7 @@
 , enableCuda      ? (config.cudaSupport or false), cudatoolkit
 
 , enableIpp       ? false
-, enableContrib   ? false, protobuf3_1, caffe, glog, boost, google-gflags
+, enableContrib   ? false, # caffe, glog, boost, google-gflags
 , enablePython    ? false, pythonPackages
 , enableGtk2      ? false, gtk2
 , enableGtk3      ? false, gtk3
@@ -123,7 +123,6 @@ let
 
   opencvFlag = name: enabled: "-DWITH_${name}=${if enabled then "ON" else "OFF"}";
 
-  caffe_protobuf3_1 = caffe.override { protobuf = protobuf3_1; };
 in
 
 stdenv.mkDerivation rec {
@@ -157,7 +156,7 @@ stdenv.mkDerivation rec {
     '');
 
   buildInputs =
-       [ zlib pcre hdf5 ]
+       [ zlib pcre hdf5 protobuf ]
     ++ lib.optional enablePython pythonPackages.python
     ++ lib.optional enableGtk2 gtk2
     ++ lib.optional enableGtk3 gtk3
@@ -176,7 +175,11 @@ stdenv.mkDerivation rec {
     # tesseract & leptonica.
     ++ lib.optionals enableTesseract [ tesseract leptonica ]
     ++ lib.optional enableCuda cudatoolkit
-    ++ lib.optionals buildContrib [ protobuf3_1 caffe_protobuf3_1 glog boost google-gflags ]
+
+    # These are only needed for the currently disabled
+    # cnn_3dobj and dnn_modern modules
+    # ++ lib.optionals buildContrib [ caffe glog boost google-gflags ]
+
     ++ lib.optionals stdenv.isDarwin [ AVFoundation Cocoa QTKit ]
     ++ lib.optionals enableDocs [ doxygen graphviz-nox ];
 
@@ -188,6 +191,8 @@ stdenv.mkDerivation rec {
 
   cmakeFlags = [
     "-DWITH_IPP=${if enableIpp then "ON" else "OFF"} -DWITH_OPENMP=ON"
+    "-DBUILD_PROTOBUF=OFF"
+    "-DPROTOBUF_UPDATE_FILES=ON"
     (opencvFlag "TIFF" enableTIFF)
     (opencvFlag "JASPER" enableJPEG2K)
     (opencvFlag "WEBP" enableWebP)
@@ -200,12 +205,17 @@ stdenv.mkDerivation rec {
     "-DCUDA_FAST_MATH=ON"
     "-DCUDA_HOST_COMPILER=${cudatoolkit.cc}/bin/gcc"
   ] ++ lib.optionals buildContrib [
-         "-DBUILD_PROTOBUF=OFF"
-         "-DBUILD_opencv_cnn_3dobj=OFF" # the cnn_3dobj module fails to build
+         # the cnn_3dobj module fails to build
+         "-DBUILD_opencv_cnn_3dobj=OFF"
+
+         # the dnn_modern module causes:
+         # https://github.com/opencv/opencv_contrib/issues/823
+         "-DBUILD_opencv_dnn_modern=OFF"
        ]
     ++ lib.optionals stdenv.isDarwin ["-DWITH_OPENCL=OFF" "-DWITH_LAPACK=OFF"]
 
-    # The tiny-dnn-1.0.0a3 dependency of the dnn_modern module fails to build on OS X so we disable it for now.
+    # The tiny-dnn-1.0.0a3 dependency of the dnn_modern module fails to build on OS X
+    # so we disable it for now.
     ++ lib.optional (stdenv.isDarwin && buildContrib) "-DBUILD_opencv_dnn_modern=OFF";
 
   enableParallelBuilding = true;
