@@ -1,7 +1,3 @@
-# This strongswan-swanctl test is based on:
-# https://www.strongswan.org/testing/testresults/swanctl/rw-psk-ipv4/index.html
-# https://github.com/strongswan/strongswan/tree/master/testing/tests/swanctl/rw-psk-ipv4
-#
 # The roadwarrior carol sets up a connection to gateway moon. The authentication
 # is based on pre-shared keys and IPv4 addresses. Upon the successful
 # establishment of the IPsec tunnels, the specified updown script automatically
@@ -16,19 +12,60 @@
 # See the NixOS manual for how to run this test:
 # https://nixos.org/nixos/manual/index.html#sec-running-nixos-tests-interactively
 
-import ./make-test.nix ({ pkgs, ...} :
+import ../make-test.nix ({ pkgs, ...} :
 
 let
   ifAddr = node: iface: (pkgs.lib.head node.config.networking.interfaces.${iface}.ip4).address;
 
+  moon  = "moon";
+  carol = "carol";
+  hosts = [ moon carol ];
+
   allowESP = "iptables --insert INPUT --protocol ESP --jump ACCEPT";
 
   # Shared VPN settings:
-  vlan0         = "192.168.0.0/24";
-  version       = 2;
-  secret        = "0sFpZAZqEN6Ti9sqt4ZP5EWcqx";
-  esp_proposals = [ "aes128gcm128-x25519" ];
-  proposals     = [ "aes128-sha256-x25519" ];
+  vlan0   = "192.168.0.0/24";
+  version = 2;
+
+  ################################################################################
+  # PKI keys & certificates
+  ################################################################################
+
+  buildInputs = [ pkgs.strongswan ];
+
+  caPrivKey = mkPrivKey "ca";
+
+  mkPrivKey = name : pkgs.runCommand "${name}PrivKey.der"
+    {inherit buildInputs;}
+    ''pki --gen > $out'';
+
+  caCert = pkgs.runCommand "caCert.der"
+    {inherit buildInputs; inherit caPrivKey;}
+    ''pki --self --in $caPrivKey --dn "C=CH, O=strongSwan, CN=strongSwan CA" --ca > $out'';
+
+  mkPubKey = name : pkgs.runCommand "${name}PubKey.der"
+    {inherit buildInputs; privKey = privKeys."${name}";}
+    ''pki --pub --in $privKey > $out'';
+
+  mkCert = name : pkgs.runCommand "${name}Cert.der"
+    {inherit buildInputs; inherit caCert; inherit caPrivKey; pubKey = pubKeys."${name}"; cn = name;}
+    ''pki --issue --in $pubKey --cacert $caCert --cakey $caPrivKey \
+        --dn "C=CH, O=strongSwan, CN=$cn" --san $cn > $out'';
+
+  privKeys = pkgs.lib.genAttrs hosts mkPrivKey;
+  pubKeys  = pkgs.lib.genAttrs hosts mkPubKey;
+  certs    = pkgs.lib.genAttrs hosts mkCert;
+
+  # This function returns a module that installs the private key, certificate
+  # and CA certificate for the given name.
+  etcSwanctlPkiFiles = name : {
+    environment.etc = {
+      "swanctl/rsa/${name}PrivKey.der" = {source = privKeys."${name}"; mode = "400";};
+      "swanctl/x509/${name}Cert.der"   = {source = certs."${name}";    mode = "400";};
+      "swanctl/x509ca/caCert.der"      = {source = caCert;             mode = "400";};
+    };
+  };
+
 in {
   name = "strongswan-swanctl";
   meta.maintainers = with pkgs.stdenv.lib.maintainers; [ basvandijk ];
@@ -44,7 +81,6 @@ in {
 
     moon = {pkgs, config, nodes, ...} :
       let
-        carolIp = ifAddr nodes.carol "eth1";
         moonIp  = ifAddr nodes.moon  "eth2";
         strongswan = config.services.strongswan-swanctl.package;
       in {
@@ -64,33 +100,31 @@ in {
           };
         };
         environment.systemPackages = [ strongswan ];
+        imports = [ (etcSwanctlPkiFiles moon) ];
         services.strongswan-swanctl = {
           enable = true;
           swanctl = {
+            pools."carol".addrs = "10.0.0.1";
             connections = {
-              "rw" = {
+              "carol" = {
+                inherit version;
                 local_addrs = [ moonIp ];
+                pools = [ carol ];
                 local."main" = {
-                  auth = "psk";
+                  auth = "pubkey";
+                  certs = [ "moonCert.der" ];
+                  id = moon;
                 };
                 remote."main" = {
-                  auth = "psk";
+                  auth = "pubkey";
+                  id = carol;
                 };
                 children = {
-                  "net" = {
+                  "carol" = {
                     local_ts = [ vlan0 ];
                     updown = "${strongswan}/libexec/ipsec/_updown iptables";
-                    inherit esp_proposals;
                   };
                 };
-                inherit version;
-                inherit proposals;
-              };
-            };
-            secrets = {
-              ike."carol" = {
-                id."main" = carolIp;
-                inherit secret;
               };
             };
           };
@@ -99,8 +133,7 @@ in {
 
     carol = {pkgs, config, nodes, ...} :
       let
-        carolIp = ifAddr nodes.carol "eth1";
-        moonIp  = ifAddr nodes.moon  "eth2";
+        moonIp  = ifAddr nodes.moon "eth2";
         strongswan = config.services.strongswan-swanctl.package;
       in {
         virtualisation.vlans = [ 1 ];
@@ -109,37 +142,27 @@ in {
           firewall.extraCommands = allowESP;
         };
         environment.systemPackages = [ strongswan ];
+        imports = [ (etcSwanctlPkiFiles carol) ];
         services.strongswan-swanctl = {
           enable = true;
           swanctl = {
-            connections = {
-              "home" = {
-                local_addrs = [ carolIp ];
-                remote_addrs = [ moonIp ];
-                local."main" = {
-                  auth = "psk";
-                  id = carolIp;
-                };
-                remote."main" = {
-                  auth = "psk";
-                  id = moonIp;
-                };
-                children = {
-                  "home" = {
-                    remote_ts = [ vlan0 ];
-                    start_action = "trap";
-                    updown = "${strongswan}/libexec/ipsec/_updown iptables";
-                    inherit esp_proposals;
-                  };
-                };
-                inherit version;
-                inherit proposals;
+            connections."carol" = {
+              inherit version;
+              remote_addrs = [ moonIp ];
+              vips = [ "0.0.0.0" ];
+              local."main" = {
+                auth = "pubkey";
+                id = carol;
+                certs = [ "carolCert.der" ];
               };
-            };
-            secrets = {
-              ike."moon" = {
-                id."main" = moonIp;
-                inherit secret;
+              remote."main" = {
+                auth = "pubkey";
+                id = moon;
+              };
+              children ."carol" = {
+                remote_ts = [ vlan0 ];
+                start_action = "trap";
+                updown = "${strongswan}/libexec/ipsec/_updown iptables";
               };
             };
           };

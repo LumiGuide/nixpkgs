@@ -4,7 +4,7 @@
 # authentication is based on X.509 certificates. In order to test the tunnel
 # alice and carol ping each other.
 
-import ./make-test.nix ({ pkgs, ...} :
+import ../make-test.nix ({ pkgs, ...} :
 let
 
   # Copied from: https://wiki.strongswan.org/projects/strongswan/wiki/CorrectTrafficDump#Examples
@@ -100,7 +100,7 @@ let
       imports = [ (etcSwanctlPkiFiles name) ];
       networking = {
         dhcpcd.enable = false;
-        firewall.extraCommands = firewallLoggingCommands;
+        #firewall.extraCommands = firewallLoggingCommands;
       };
       environment.systemPackages = [
         strongswan
@@ -172,7 +172,7 @@ let
         dhcpcd.enable = false;
         firewall = {
           allowedUDPPorts = [ 4500 500 ];
-          extraCommands = firewallLoggingCommands;
+          #extraCommands = firewallLoggingCommands;
         };
       };
       environment.systemPackages = [

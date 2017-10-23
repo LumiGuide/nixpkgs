@@ -322,8 +322,8 @@ in rec {
   tests.slim = callTest tests/slim.nix {};
   tests.smokeping = callTest tests/smokeping.nix {};
   tests.snapper = callTest tests/snapper.nix {};
-  tests.strongswan-swanctl = callTest tests/strongswan-swanctl.nix {};
-  tests.strongswan-swanctl-pubkey = callTest tests/strongswan-swanctl-pubkey.nix {};
+  tests.strongswan-swanctl.rw-psk-ipv4 = callTest tests/strongswan-swanctl/rw-psk-ipv4.nix {};
+  tests.strongswan-swanctl.pubkey      = callTest tests/strongswan-swanctl/pubkey.nix {};
   tests.taskserver = callTest tests/taskserver.nix {};
   tests.tomcat = callTest tests/tomcat.nix {};
   tests.udisks2 = callTest tests/udisks2.nix {};
