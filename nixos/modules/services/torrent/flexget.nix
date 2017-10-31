@@ -62,7 +62,6 @@ in {
         path = [ pkg ];
         serviceConfig = {
           User = cfg.user;
-          Environment = "TZ=${config.time.timeZone}";
           ExecStartPre = "${pkgs.coreutils}/bin/install -m644 ${ymlFile} ${configFile}";
           ExecStart = "${pkg}/bin/flexget -c ${configFile} daemon start";
           ExecStop = "${pkg}/bin/flexget -c ${configFile} daemon stop";
@@ -70,6 +69,8 @@ in {
           Restart = "on-failure";
           PrivateTmp = true;
           WorkingDirectory = toString cfg.homeDir;
+        } // optionalAttrs (!isNull config.time.timeZone) {
+          Environment = "TZ=${config.time.timeZone}";
         };
         wantedBy = [ "multi-user.target" ];
       };
