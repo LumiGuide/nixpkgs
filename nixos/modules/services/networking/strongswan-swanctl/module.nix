@@ -9,8 +9,12 @@ let
   # TODO: auto-generate these files using:
   # https://github.com/strongswan/strongswan/tree/master/conf
   # IDEA: extend the format-options.py script to output these Nix files.
-  strongswanParams = import ./strongswan-params.nix lib;
-  swanctlParams    = import ./swanctl-params.nix    lib;
+  swanctlParams = import ./swanctl-params.nix    lib;
+
+  strongswanConf = pkgs.writeTextFile {
+    name = "strongswan.conf";
+    text = cfg.strongswan.conf;
+  };
 in  {
   options.services.strongswan-swanctl = {
     enable = mkEnableOption "strongswan-swanctl service";
@@ -24,8 +28,19 @@ in  {
       '';
     };
 
-    strongswan = paramsToOptions strongswanParams;
-    swanctl    = paramsToOptions swanctlParams;
+    strongswan = {
+      conf = mkOption {
+        type = types.str;
+        default = "";
+        description = ''
+          Contents of the <literal>strongswan.conf</literal> file.
+          </para><para>
+          For documentation on the options see:
+          https://wiki.strongswan.org/projects/strongswan/wiki/StrongswanConf
+        '';
+      };
+    };
+    swanctl = paramsToOptions swanctlParams;
   };
 
   config = mkIf cfg.enable {
@@ -63,10 +78,7 @@ in  {
       after    = [ "network-online.target" "keys.target" ];
       wants    = [ "keys.target" ];
       path = with pkgs; [ kmod iproute iptables utillinux ];
-      environment.STRONGSWAN_CONF = pkgs.writeTextFile {
-        name = "strongswan.conf";
-        text = paramsToConf cfg.strongswan strongswanParams;
-      };
+      environment.STRONGSWAN_CONF = strongswanConf;
       restartTriggers = [ config.environment.etc."swanctl/swanctl.conf".source ];
       serviceConfig = {
         ExecStart     = "${cfg.package}/sbin/charon-systemd";
