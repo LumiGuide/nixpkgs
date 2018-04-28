@@ -3,7 +3,7 @@
 , gmp, python, iptables, ldns, unbound, openssl, pcsclite
 , openresolv
 , systemd, pam
-, curl
+, curl, libgcrypt
 , enableTNC            ? false, trousers, sqlite, libxml2
 , enableNetworkManager ? false, networkmanager
 }:
@@ -23,7 +23,9 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkgconfig autoreconfHook ];
   buildInputs =
-    [ curl gmp python iptables ldns unbound openssl pcsclite ]
+    [ curl gmp python iptables ldns unbound pcsclite ]
+    ++ optional curl.passthru.sslSupport openssl
+    ++ optional curl.passthru.gnutlsSupport libgcrypt
     ++ optionals enableTNC [ trousers sqlite libxml2 ]
     ++ optionals stdenv.isLinux [ systemd.dev pam ]
     ++ optionals enableNetworkManager [ networkmanager ];
@@ -54,7 +56,6 @@ stdenv.mkDerivation rec {
   configureFlags =
     [ "--enable-swanctl" "--enable-cmd" "--enable-systemd"
       "--enable-farp" "--enable-dhcp"
-      "--enable-openssl"
       "--enable-eap-sim" "--enable-eap-sim-file" "--enable-eap-simaka-pseudonym"
       "--enable-eap-simaka-reauth" "--enable-eap-identity" "--enable-eap-md5"
       "--enable-eap-gtc" "--enable-eap-aka" "--enable-eap-aka-3gpp2"
@@ -63,6 +64,10 @@ stdenv.mkDerivation rec {
       "--enable-pkcs11" "--enable-eap-sim-pcsc" "--enable-dnscert" "--enable-unbound"
       "--enable-af-alg" "--enable-xauth-pam" "--enable-chapoly"
       "--enable-curl" ]
+    # Add the crypto plugin matching curl's backend
+    # (see https://wiki.strongswan.org/projects/strongswan/wiki/Curl)
+    ++ optionals curl.passthru.sslSupport [ "--enable-openssl" ]
+    ++ optionals curl.passthru.gnutlsSupport [ "--enable-gcrypt" ]
     ++ optionals stdenv.isx86_64 [ "--enable-aesni" "--enable-rdrand" ]
     ++ optional (stdenv.system == "i686-linux") "--enable-padlock"
     ++ optionals enableTNC [
