@@ -99,7 +99,7 @@ stdenv.mkDerivation rec {
   };
 
   passthru = {
-    inherit sslSupport openssl;
+    inherit sslSupport openssl gnutlsSupport gnutls;
   };
 
   meta = with stdenv.lib; {
