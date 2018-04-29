@@ -3,14 +3,19 @@
 , gmp, python, iptables, ldns, unbound, openssl, pcsclite
 , openresolv
 , systemd, pam
-, curl, libgcrypt
+, curl
 , enableTNC            ? false, trousers, sqlite, libxml2
 , enableNetworkManager ? false, networkmanager
+, enableGCrypt         ? false, libgcrypt
 }:
 
 with stdenv.lib;
 
-stdenv.mkDerivation rec {
+let curl' = curl.override {
+              sslSupport    = !enableGCrypt;
+              gnutlsSupport =  enableGCrypt;
+            };
+in stdenv.mkDerivation rec {
   name = "strongswan-${version}";
   version = "5.6.2";
 
@@ -23,9 +28,8 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkgconfig autoreconfHook ];
   buildInputs =
-    [ curl gmp python iptables ldns unbound pcsclite ]
-    ++ optional curl.passthru.sslSupport openssl
-    ++ optional curl.passthru.gnutlsSupport libgcrypt
+    [ curl' gmp python iptables ldns unbound pcsclite openssl ]
+    ++ optional enableGCrypt libgcrypt
     ++ optionals enableTNC [ trousers sqlite libxml2 ]
     ++ optionals stdenv.isLinux [ systemd.dev pam ]
     ++ optionals enableNetworkManager [ networkmanager ];
@@ -66,8 +70,8 @@ stdenv.mkDerivation rec {
       "--enable-curl" ]
     # Add the crypto plugin matching curl's backend
     # (see https://wiki.strongswan.org/projects/strongswan/wiki/Curl)
-    ++ optionals curl.passthru.sslSupport [ "--enable-openssl" ]
-    ++ optionals curl.passthru.gnutlsSupport [ "--enable-gcrypt" ]
+    ++ optionals (!enableGCrypt) [ "--enable-openssl" ]
+    ++ optionals   enableGCrypt  [ "--enable-gcrypt" ]
     ++ optionals stdenv.isx86_64 [ "--enable-aesni" "--enable-rdrand" ]
     ++ optional (stdenv.system == "i686-linux") "--enable-padlock"
     ++ optionals enableTNC [
