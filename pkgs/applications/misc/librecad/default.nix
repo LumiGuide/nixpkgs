@@ -1,13 +1,24 @@
-{ stdenv, fetchurl, qt4, qmake4Hook, muparser, which, boost, pkgconfig }:
+{ stdenv
+, fetchFromGitHub
+, makeWrapper
+, qmake
+, qtbase
+, qtsvg
+, muparser
+, which
+, boost
+, pkgconfig
+}:
 
 stdenv.mkDerivation rec {
-  version = "2.1.3";
+  version = "2.2.0-rc1";
   name = "librecad-${version}";
 
-  src = fetchurl {
-    url = "https://github.com/LibreCAD/LibreCAD/tarball/${version}";
-    name = name + ".tar.gz";
-    sha256 = "1czp8bja61hfav2m7184cq1np1n76w3w6vn0hlkp81hhz9zc62sx";
+  src = fetchFromGitHub {
+    owner = "LibreCAD";
+    repo = "LibreCAD";
+    rev = version;
+    sha256 = "0kwj838hqzbw95gl4x6scli9gj3gs72hdmrrkzwq5rjxam18k3f3";
   };
 
   patchPhase = ''
@@ -23,9 +34,8 @@ stdenv.mkDerivation rec {
     cp -R unix/resources $out/share/librecad
   '';
 
-  buildInputs = [ qt4 muparser which boost ];
-  nativeBuildInputs = [ pkgconfig qmake4Hook ];
-
+  buildInputs = [ qtbase qtsvg muparser which boost ];
+  nativeBuildInputs = [ makeWrapper pkgconfig qmake ];
   enableParallelBuilding = true;
 
   meta = {
