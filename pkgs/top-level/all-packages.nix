@@ -1537,7 +1537,7 @@ with pkgs;
   riot-web = callPackage ../applications/networking/instant-messengers/riot/riot-web.nix {
     conf = config.riot-web.conf or null;
   };
-  
+
   roundcube = callPackage ../servers/roundcube { };
 
   rsbep = callPackage ../tools/backup/rsbep { };
@@ -11631,8 +11631,6 @@ with pkgs;
     buildPythonApplication click future six;
   };
 
-  postgis = callPackage ../development/libraries/postgis { };
-
   protobuf = protobuf3_6;
 
   protobuf3_6 = callPackage ../development/libraries/protobuf/3.6.nix { };
@@ -13432,6 +13430,8 @@ with pkgs;
   psqlodbc = callPackage ../development/libraries/psqlodbc { };
 
   ## -- deprecated top-level names for extensions. TODO FIXME: remove after 18.09
+
+  postgis = postgresqlPackages.callPackageWithDeprecation "postgis" ../servers/sql/postgresql/ext/postgis.nix {};
 
   pgjwt = postgresqlPackages.callPackageWithDeprecation "pgjwt" ../servers/sql/postgresql/ext/pgjwt.nix {};
 
