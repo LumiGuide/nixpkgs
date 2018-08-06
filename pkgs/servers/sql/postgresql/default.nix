@@ -88,6 +88,7 @@ let
 
     passthru = {
       inherit readline psqlSchema;
+      compareVersion = builtins.compareVersions version;
     };
 
     meta = with lib; {
