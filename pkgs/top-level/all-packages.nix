@@ -11549,8 +11549,6 @@ with pkgs;
     buildPythonApplication click future six;
   };
 
-  postgis = callPackage ../development/libraries/postgis { };
-
   protobuf = protobuf3_4;
 
   protobuf3_5 = callPackage ../development/libraries/protobuf/3.5.nix { };
@@ -13327,6 +13325,8 @@ with pkgs;
   psqlodbc = callPackage ../development/libraries/psqlodbc { };
 
   ## -- deprecated top-level names for extensions. TODO FIXME: remove after 18.09
+
+  postgis = postgresqlPackages.callPackageWithDeprecation "postgis" ../servers/sql/postgresql/ext/postgis.nix {};
 
   pgjwt = postgresqlPackages.callPackageWithDeprecation "pgjwt" ../servers/sql/postgresql/ext/pgjwt.nix {};
 
