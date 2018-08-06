@@ -40,6 +40,8 @@ let
 
       pgjwt = callPackage ./ext/pgjwt.nix {};
 
+      pg_jobmon = callPackage ./ext/pg_jobmon.nix {};
+
       pg_repack = callPackage ./ext/pg_repack.nix {};
 
       pgroonga = callPackage ./ext/pgroonga.nix {};
