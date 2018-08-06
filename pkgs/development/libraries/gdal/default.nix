@@ -9,23 +9,13 @@
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  version = "2.3.0";
+  version = "2.3.1";
   name = "gdal-${version}";
 
   src = fetchurl {
     url = "https://download.osgeo.org/gdal/${version}/${name}.tar.xz";
-    sha256 = "18iaamzkn0lipizynvspf3bs5qzgcy36hn6bbi941q8dlfdf8xbg";
+    sha256 = "0nkjnznrp7dr41zsh8j923c9zpc3i5vj3wjfc2df9rrybb22ailw";
   };
-
-  patches = [
-    # fix build with recent Poppler
-    (fetchpatch {
-      url    = "https://github.com/OSGeo/gdal/commit/124f0343436d1267319ac627fc220530091b41ea.diff";
-      stripLen = 2;
-      extraPrefix = "";
-      sha256 = "1v6iiy4cgrdcfas3iva5swh9446pqfjh5p6bcab6y49hyjhpsgfy";
-    })
-  ];
 
   buildInputs = [ unzip libjpeg libtiff libpng proj openssl sqlite
     libspatialite poppler hdf4 ]
