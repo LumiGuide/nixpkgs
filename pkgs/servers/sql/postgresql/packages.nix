@@ -31,8 +31,6 @@ let
 
       cstore_fdw = callPackage ./ext/cstore_fdw.nix {};
 
-      postgis = callPackage ./ext/postgis.nix {};
-
       pg_cron = callPackage ./ext/pg_cron.nix {};
 
       pg_hll = callPackage ./ext/pg_hll.nix {};
@@ -51,6 +49,13 @@ let
 
       plv8 = callPackage ./ext/plv8.nix {
         v8 = pkgs.v8_6_x;
+      };
+
+      postgis = callPackage ./ext/postgis.nix {
+        ## NOTE: set postgresql to null, so we don't end up in the odd
+        ## case where 'gdal' pulls in postgresql and causes various versions
+        ## to depend on each other.
+        gdal = pkgs.gdal.override { postgresql = null; };
       };
 
       timescaledb = callPackage ./ext/timescaledb.nix {};

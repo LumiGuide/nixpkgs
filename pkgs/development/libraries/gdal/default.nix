@@ -1,8 +1,14 @@
 { stdenv, fetchurl, fetchpatch, unzip, libjpeg, libtiff, zlib
-, postgresql, mysql, libgeotiff, pythonPackages, proj, geos, openssl
+, mysql, libgeotiff, pythonPackages, proj, geos, openssl
 , libpng, sqlite, libspatialite, poppler, hdf4
 , libiconv
-, netcdfSupport ? true, netcdf, hdf5 , curl
+, netcdfSupport ? true, netcdf, hdf5, curl
+
+# postgresql is optional, because: if a version of postgres uses the postgis,
+# it depends on gdal, which depends on the default version of postgres. this
+# has the strange effect of e.g.  postgres 9.3 depending on postgres 9.6 (or
+# whatever the default is.) if set to null, do not build with pg support.
+, postgresql
 }:
 
 with stdenv.lib;
@@ -38,7 +44,6 @@ stdenv.mkDerivation rec {
     "--with-png=${libpng.dev}"      # optional
     "--with-poppler=${poppler.dev}" # optional
     "--with-libz=${zlib.dev}"       # optional
-    "--with-pg=${postgresql}/bin/pg_config"
     "--with-mysql=${mysql.connector-c or mysql}/bin/mysql_config"
     "--with-geotiff=${libgeotiff}"
     "--with-sqlite3=${sqlite.dev}"
@@ -47,7 +52,8 @@ stdenv.mkDerivation rec {
     "--with-static-proj4=${proj}" # optional
     "--with-geos=${geos}/bin/geos-config"# optional
     "--with-hdf4=${hdf4.dev}" # optional
-    (if netcdfSupport then "--with-netcdf=${netcdf}" else "")
+    (optionalString netcdfSupport "--with-netcdf=${netcdf}")
+    (optionalString (postgresql != null) "--with-pg=${postgresql}/bin/pg_config")
   ];
 
   hardeningDisable = [ "format" ];
