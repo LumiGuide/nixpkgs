@@ -1,4 +1,6 @@
 { system ? builtins.currentSystem
+, test_pg_journal ? true
+, test_postgis ? true
 }:
 
 with import ../lib/testing.nix { inherit system; };
@@ -18,7 +20,7 @@ let
 
   # Sample SQL script to use. Note: this should work on _every_ available, supported
   # version of PostgreSQL shipped by Nixpkgs.
-  test-sql = pkgs.writeText "test.sql" ''
+  test-sql = pkgs.writeText "test.sql" (''
     CREATE EXTENSION pgcrypto; -- just to check if lib loading works
     CREATE TABLE sth (
       id int
@@ -30,7 +32,24 @@ let
     INSERT INTO sth (id) VALUES (1);
     CREATE TABLE xmltest ( doc xml );
     INSERT INTO xmltest (doc) VALUES ('<test>ok</test>'); -- check if libxml2 enabled
-  '';
+  '' + optionalString test_postgis ''
+    -- Enable the postgis extension and insert some geography data.
+    -- Copied from section 4.2.1 from the PostGIS manual.
+    CREATE EXTENSION postgis;
+    CREATE EXTENSION postgis_topology;
+    CREATE TABLE global_points (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(64),
+      location GEOGRAPHY(POINT,4326)
+    );
+    INSERT INTO global_points (name, location)
+      VALUES ('Town', ST_GeogFromText('SRID=4326; POINT(-110 30)') );
+    INSERT INTO global_points (name, location)
+      VALUES ('Forest', ST_GeogFromText('SRID=4326; POINT(-109 29)') );
+    INSERT INTO global_points (name, location)
+      VALUES ('London', ST_GeogFromText('SRID=4326; POINT(0 49)') );
+    CREATE INDEX global_points_gix ON global_points USING GIST ( location );
+  '');
 
   # Actual test
   make-test = name: packages: makeTest {
@@ -40,21 +59,26 @@ let
       maintainers = [ thoughtpolice zagy ];
     };
 
-    machine = { pkgs, ...}:
+    machine = { pkgs, lib, ...}: lib.mkMerge [
       {
         services.postgresql.enable = true;
         services.postgresql.packages = packages;
+        services.postgresql.plugins = p: with p;
+          optional test_postgis postgis;
 
+        services.postgresqlBackup.enable = true;
+        services.postgresqlBackup.databases = [ "postgres" ];
+      }
+
+      (lib.mkIf test_pg_journal {
         services.postgresql.plugins = p: with p; [ pg_journal ];
         services.postgresql.extraConfig = ''
           shared_preload_libraries = 'pg_journal'
           log_statement = all
         '';
         environment.systemPackages = [ pkgs.jq ];
-
-        services.postgresqlBackup.enable = true;
-        services.postgresqlBackup.databases = [ "postgres" ];
-      };
+      })
+    ];
 
     testScript = ''
       sub check_count {
@@ -78,9 +102,22 @@ let
       $machine->fail(check_count("SELECT * FROM sth;", 4));
       $machine->succeed(check_count("SELECT xpath(\'/test/text()\', doc) FROM xmltest;", 1));
 
+      ${optionalString test_pg_journal ''
       # Check that pg_journal plugin is outputting structured logs to the journal
       $machine->succeed('journalctl -u postgresql -r -o json | \
         \jq \'select(.PGDATABASE == "postgres") | .MESSAGE | test(".*SELECT \\\\* FROM sth")\' | grep true');
+      ''}
+
+      ${optionalString test_postgis ''
+      # Check some postgis query
+      $machine->succeed(' \
+        test "$(sudo -u postgres psql postgres -tAc \
+                "SELECT name \
+                 FROM global_points \
+                 WHERE ST_DWithin(location, ST_GeogFromText(\'SRID=4326; POINT(0 0)\'), 10000000);" \
+              )" = "London" \
+      ');
+      ''}
 
       # Check backup service
       $machine->succeed("systemctl start postgresqlBackup-postgres.service");
