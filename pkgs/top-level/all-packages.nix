@@ -1255,6 +1255,8 @@ with pkgs;
 
   fsmark = callPackage ../tools/misc/fsmark { };
 
+  futhark = haskell.lib.justStaticExecutables haskellPackages.futhark;
+
   fwup = callPackage ../tools/misc/fwup { };
 
   fzf = callPackage ../tools/misc/fzf { };

@@ -504,4 +504,19 @@ self: super: builtins.intersectAttrs super {
   blank-canvas = dontCheck super.blank-canvas;
   blank-canvas_0_6_2 = dontCheck super.blank-canvas_0_6_2;
 
+  futhark = with pkgs;
+    let path = stdenv.lib.makeBinPath [ gcc ];
+    in overrideCabal (addBuildTool super.futhark makeWrapper) (_drv: {
+      postInstall = ''
+        wrapProgram $out/bin/futhark-c \
+          --prefix PATH : "${path}"
+
+        wrapProgram $out/bin/futhark-opencl \
+          --prefix PATH : "${path}" \
+          --set NIX_CC_WRAPPER_x86_64_unknown_linux_gnu_TARGET_HOST 1 \
+          --set NIX_CFLAGS_COMPILE "-I${opencl-headers}/include" \
+          --set NIX_CFLAGS_LINK "-L${opencl-icd}/lib"
+      '';
+    });
+
 }
