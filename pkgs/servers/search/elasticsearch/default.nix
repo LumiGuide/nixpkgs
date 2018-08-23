@@ -19,14 +19,16 @@ stdenv.mkDerivation (rec {
     url = "https://artifacts.elastic.co/downloads/elasticsearch/${name}.tar.gz";
     sha256 =
       if enableUnfree
-      then "0960ak602pm95p2mha9cb1mrwdky8pfw3y89r2v4zpr5n730hmnh"
-      else "1i4i1ai75bf8k0zd1qf8x0bavrm8rcw13xdim443zza09w95ypk4";
+      then "00agwbq6s2wdpfbp9s6jhjsb66lsp907cz40wbg2mlgcbkxnwy79"
+      else "1dlqyl4mgd0sinfp8qz03z7psxngl9x4v5qqi6945wvlni0ipj63";
   };
 
   patches = [ ./es-home-6.x.patch ];
 
   postPatch = ''
     sed -i "s|ES_CLASSPATH=\"\$ES_HOME/lib/\*\"|ES_CLASSPATH=\"$out/lib/*\"|" ./bin/elasticsearch-env
+
+    sed -i "s|ES_CLASSPATH=\"\$ES_CLASSPATH:\$ES_HOME/\$additional_classpath_directory/\*\"|ES_CLASSPATH=\"\$ES_CLASSPATH:$out/\$additional_classpath_directory/\*\"|" ./bin/elasticsearch-cli
   '';
 
   buildInputs = [ makeWrapper jre_headless utillinux ];
