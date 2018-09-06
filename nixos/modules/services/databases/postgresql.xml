@@ -18,7 +18,8 @@
 provides multiple versions of PostgreSQL, as well as a set of extensions that
 provide powerful features on top of the default installation.</para>
 
-<section><title>Introduction to the PostgreSQL packaging infrastructure</title>
+<section xml:id="module-services-postgres-intro-packaging-infra">
+<title>Introduction to the PostgreSQL packaging infrastructure</title>
 
 <para>NixOS provides multiple versions of PostgreSQL, available as
 <emphasis>sets</emphasis> of packages, which you use to configure the
@@ -60,7 +61,7 @@ pkgs.postgresql96Packages.postgis
 
 </section>
 
-<section><title>Configuring</title>
+<section xml:id="module-services-postgres-configuring"><title>Configuring</title>
 
 <para>To enable PostgreSQL, add the following to your
 <filename>configuration.nix</filename>:
@@ -100,7 +101,7 @@ postgres=>
 
 </section>
 
-<section><title>Enabling and installing extensions</title>
+<section xml:id="module-services-postgres-extensions"><title>Enabling and installing extensions</title>
 
 <para>In order to install extensions, use the
 <option>services.postgresql.plugins</option> option. This option should contain
@@ -139,7 +140,7 @@ postgres=> CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 now be available.</para>
 </section>
 
-<section><title>Upgrading</title>
+<section xml:id="module-services-postgres-upgrading"><title>Upgrading</title>
 
 <para>This section will be brief. Be sure to read the
 <link xlink:href="https://www.postgresql.org/docs/current/static/upgrading.html">official
@@ -206,14 +207,14 @@ the old data into the new server, including roles, databases, etc:
 
 </section>
 
-<section><title>Options</title>
+<section xml:id="module-services-postgres-options"><title>Options</title>
 
 <para>A complete list of options for the PostgreSQL module may be found <link
 linkend="opt-services.postgresql.enable">here</link>.</para>
 
 </section>
 
-<section><title>Authoring new extensions</title>
+<section xml:id="module-services-postgres-new-extensions"><title>Authoring new extensions</title>
 
 <para>FIXME: document how to write an extension</para>
 
