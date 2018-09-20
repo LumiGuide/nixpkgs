@@ -3491,6 +3491,11 @@
     github = "roconnor";
     name = "Russell O'Connor";
   };
+  roelvandijk = {
+    email = "roel@lambdacube.nl";
+    github = "roelvandijk";
+    name = "Roel van Dijk";
+  };
   romildo = {
     email = "malaquias@gmail.com";
     github = "romildo";
