@@ -6,13 +6,10 @@
 }:
 
 let
-  openrazerSrc = import ./src.nix;
+  common = import ./common.nix { inherit stdenv fetchFromGitHub; };
 in
-stdenv.mkDerivation rec {
-  inherit (openrazerSrc) version;
-  name = "openrazer-${version}-${kernel.version}";
-
-  src = fetchFromGitHub openrazerSrc.github;
+stdenv.mkDerivation (common // {
+  name = "openrazer-${common.version}-${kernel.version}";
 
   nativeBuildInputs = kernel.moduleBuildDependencies;
 
@@ -39,11 +36,5 @@ stdenv.mkDerivation rec {
       --replace "PATH='/sbin:/bin:/usr/sbin:/usr/bin'" ""
   '';
 
-  meta = with stdenv.lib; {
-    description = "An entirely open source driver and user-space daemon that allows you to manage your Razer peripherals on GNU/Linux";
-    homepage = https://openrazer.github.io/;
-    license = licenses.gpl2;
-    maintainers =  with maintainers; [ roelvandijk ];
-    platforms = platforms.linux;
-  };
-}
+  meta.description = "An entirely open source Linux driver that allows you to manage your Razer peripherals on GNU/Linux";
+})

@@ -13,16 +13,15 @@
 }:
 
 let
-  openrazerSrc = import ./src.nix;
+  common = import ./common.nix { inherit stdenv fetchFromGitHub; };
 in
-buildPythonApplication rec {
-  inherit (openrazerSrc) version;
+buildPythonApplication (common // rec {
   pname = "openrazer_daemon";
+
+  sourceRoot = "source/daemon";
 
   outputs = [ "out" "man" ];
 
-  src = fetchFromGitHub openrazerSrc.github;
-  sourceRoot = "source/daemon";
   patches = [
     # https://github.com/openrazer/openrazer/pull/680
     (fetchpatch {
@@ -66,11 +65,5 @@ buildPythonApplication rec {
       --prefix LD_LIBRARY_PATH ":" "${gtk3.out}/lib"
   '';
 
-  meta = with stdenv.lib; {
-    description = "An entirely open source driver and user-space daemon that allows you to manage your Razer peripherals on GNU/Linux";
-    homepage = https://openrazer.github.io/;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ roelvandijk ];
-    platforms = platforms.linux;
-  };
-}
+  meta.description = "An entirely open source user-space daemon that allows you to manage your Razer peripherals on GNU/Linux";
+})
