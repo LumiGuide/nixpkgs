@@ -9,7 +9,7 @@ stdenv.mkDerivation rec {
     sha256 = "1m97hpwqfaqjl9xvr4pvz2vdrsdvxbcn0nnx8pamnyc3s7pikcjp";
   };
 
-  buildInputs = [ perl ];
+  buildInputs = [ (stdenv.lib.getBin perl) ];
 
   postPatch = ''
     substituteInPlace eeprom/decode-edid --replace "/usr/sbin/parse-edid" "${read-edid}/bin/parse-edid"

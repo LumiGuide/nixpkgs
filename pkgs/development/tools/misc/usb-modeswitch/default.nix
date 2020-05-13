@@ -34,8 +34,8 @@ stdenv.mkDerivation rec {
       --set PATH ${lib.makeBinPath [ utillinux coreutils bash ]}
   '';
 
-  buildInputs = [ libusb1 tcl ];
-  nativeBuildInputs = [ pkgconfig makeWrapper ];
+  buildInputs = [ libusb1 tcl makeWrapper ];
+  nativeBuildInputs = [ pkgconfig ];
 
   meta = with stdenv.lib; {
     description = "A mode switching tool for controlling 'multi-mode' USB devices";

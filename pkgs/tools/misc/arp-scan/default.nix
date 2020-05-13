@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   ];
 
   nativeBuildInputs = [ autoreconfHook ];
-  buildInputs = [ perlPackages.perl libpcap makeWrapper ];
+  buildInputs = [ (stdenv.lib.getBin perlPackages.perl) libpcap makeWrapper ];
 
   postInstall = ''
     for name in get-{oui,iab}; do
