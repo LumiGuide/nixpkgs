@@ -5,15 +5,14 @@
 , polkit
 , utillinux
 , bash
-, nodePackages
 , makeWrapper
-, electron_7
+, electron_9
 }:
 
 let
   sha256 = {
-    "x86_64-linux" = "1yvqi86bw0kym401zwknhwq9041fxg047sbj3aydnfcqf11vrrmk";
-    "i686-linux" = "12lghzhsl16h3jvzm3vw4hrly32fz99z6rdmybl8viralrxy8mb8";
+    "x86_64-linux" = "1mibqr6zldbbsnzslyhigwgi2pd81jhx74xw8z3bpr86xvbszp64";
+    "i686-linux" = "0jb7brka55day4m6m0srpbg6l4hl5dzn7210cyw4a17xwg6kg8jk";
   }."${stdenv.system}";
 
   arch = {
@@ -21,13 +20,13 @@ let
     "i686-linux" = "i386";
   }."${stdenv.system}";
 
-  electron = electron_7;
+  electron = electron_9;
 
 in
 
 stdenv.mkDerivation rec {
   pname = "etcher";
-  version = "1.5.86";
+  version = "1.5.116";
 
   src = fetchurl {
     url = "https://github.com/balena-io/etcher/releases/download/v${version}/balena-etcher-electron_${version}_${arch}.deb";
@@ -46,14 +45,13 @@ stdenv.mkDerivation rec {
   # sudo-prompt has hardcoded binary paths on Linux and we patch them here
   # along with some other paths
   patchPhase = ''
-    ${nodePackages.asar}/bin/asar extract opt/balenaEtcher/resources/app.asar tmp
+    pushd opt/balenaEtcher/resources/app
     # use Nix(OS) paths
-    sed -i "s|/usr/bin/pkexec|/usr/bin/pkexec', '/run/wrappers/bin/pkexec|" tmp/node_modules/sudo-prompt/index.js
-    sed -i 's|/bin/bash|${bash}/bin/bash|' tmp/node_modules/sudo-prompt/index.js
-    sed -i "s|'lsblk'|'${utillinux}/bin/lsblk'|" tmp/node_modules/drivelist/js/lsblk/index.js
-    sed -i "s|process.resourcesPath|'$out/share/${pname}/resources/'|" tmp/generated/gui.js
-    ${nodePackages.asar}/bin/asar pack tmp opt/balenaEtcher/resources/app.asar
-    rm -rf tmp
+    sed -i 's|/usr/bin/pkexec|/usr/bin/pkexec", "/run/wrappers/bin/pkexec|' generated/gui.js
+    sed -i 's|/bin/bash|${bash}/bin/bash|' generated/gui.js
+    sed -i 's|"lsblk"|"${utillinux}/bin/lsblk"|' generated/gui.js
+    sed -i "s|process.resourcesPath|'$out/share/${pname}/resources/'|" generated/gui.js
+    popd
   '';
 
   installPhase = ''
@@ -72,7 +70,7 @@ stdenv.mkDerivation rec {
 
   postFixup = ''
     makeWrapper ${electron}/bin/electron $out/bin/${pname} \
-      --add-flags $out/share/${pname}/resources/app.asar \
+      --add-flags $out/share/${pname}/resources/app \
       --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [ gcc-unwrapped.lib ]}"
   '';
 
