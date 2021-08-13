@@ -395,6 +395,11 @@ let
         # actually builds a symlink farm so we must dereference them).
         bazel-bin/tensorflow/tools/pip_package/build_pip_package --src "$PWD/dist"
         cp -Lr "$PWD/dist" "$python"
+      '' + lib.optionalString mklSupport ''
+        # Reduce closure size by 90% by copying relevant files from mkl.
+        cp -L ${mkl}/lib/libiomp5.so $out/lib
+        mkdir -p $out/share/doc/mkl
+        cp -L ${mkl}/share/doc/mkl/license.txt $out/share/doc/mkl
       '';
 
       postFixup = lib.optionalString cudaSupport ''
