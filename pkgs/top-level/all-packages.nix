@@ -21656,7 +21656,8 @@ with pkgs;
   inherit (callPackages ../servers/unifi { })
     unifiLTS
     unifi5
-    unifi6;
+    unifi6
+    unifi7;
   unifi = unifi6;
 
   unifi-video = callPackage ../servers/unifi-video { };
