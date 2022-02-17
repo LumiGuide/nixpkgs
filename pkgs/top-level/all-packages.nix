@@ -19843,7 +19843,8 @@ in
   inherit (callPackages ../servers/unifi { })
     unifiLTS
     unifi5
-    unifi6;
+    unifi6
+    unifi7;
   unifi = unifi6;
 
   unpackerr = callPackage ../servers/unpackerr {
