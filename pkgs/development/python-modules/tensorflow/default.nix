@@ -29,6 +29,9 @@
 , fmaSupport   ? stdenv.hostPlatform.fmaSupport
 # Darwin deps
 , Foundation, Security, cctools, llvmPackages_11
+# Override fetchAttrs. For example, fetchAttrs.sha256 may need to be overridden
+# when supported features change.
+, fetchAttrs ? { }
 }:
 
 assert cudaSupport -> cudatoolkit != null
@@ -344,8 +347,9 @@ let
     bazelBuildFlags = [
       "--config=opt" # optimize using the flags set in the configure phase
     ]
-    ++ lib.optionals stdenv.cc.isClang [ "--cxxopt=-x" "--cxxopt=c++" "--host_cxxopt=-x" "--host_cxxopt=c++" ]
-    ++ lib.optionals (mklSupport) [ "--config=mkl" ];
+    ++ lib.optionals stdenv.cc.isClang [ "--cxxopt=-x" "--cxxopt=c++" "--host_cxxopt=-x" "--host_cxxopt=c++" ];
+
+    bazelFlags = lib.optionals (mklSupport) [ "--config=mkl" ];
 
     bazelTarget = "//tensorflow/tools/pip_package:build_pip_package //tensorflow/tools/lib_package:libtensorflow";
 
@@ -355,14 +359,17 @@ let
 
     fetchAttrs = {
       # cudaSupport causes fetch of ncclArchive, resulting in different hashes
-      sha256 = if cudaSupport then
+      sha256 = if cudaSupport && mklSupport then
+        "1xh9j7vhm0a5x6b90lwyhs74j3lhra4w9pv8fv4056226czp19bn"
+      else if cudaSupport then
         "sha256-GIBs1BAUuefwlavu7dr9rFb4n1A3uwnvvCAvsBnSSqQ="
+      else if mklSupport then
+        "09par5na54qhrhzbxyrlvlh6288n2n8536j06xvg7a5mzk5w48is"
+      else if stdenv.isDarwin then
+        "sha256-156eOnnjk+wzIiGLd6k/+SAgm4AyImsV/qBsHFlxe+k="
       else
-        if stdenv.isDarwin then
-          "sha256-156eOnnjk+wzIiGLd6k/+SAgm4AyImsV/qBsHFlxe+k="
-        else
-          "sha256-Fj/wWapsre55VctJ1k1kcYKAn3uDCMPN5rVX8y76ypM=";
-    };
+        "sha256-Fj/wWapsre55VctJ1k1kcYKAn3uDCMPN5rVX8y76ypM=";
+    } // fetchAttrs;
 
     buildAttrs = {
       outputs = [ "out" "python" ];
