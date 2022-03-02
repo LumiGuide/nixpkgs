@@ -85,6 +85,9 @@
   Security,
   cctools,
   llvmPackages,
+  # Override fetchAttrs. For example, fetchAttrs.sha256 may need to be overridden
+  # when supported features change.
+  fetchAttrs ? { },
 }:
 
 let
@@ -490,8 +493,9 @@ let
 
         # workaround for https://github.com/bazelbuild/bazel/issues/15359
         "--spawn_strategy=sandboxed"
-      ]
-      ++ lib.optionals (mklSupport) [ "--config=mkl" ];
+      ];
+
+    bazelFlags = lib.optionals (mklSupport) [ "--config=mkl" ];
 
     bazelTargets = [
       "//tensorflow/tools/pip_package:build_pip_package //tensorflow/tools/lib_package:libtensorflow"
@@ -505,8 +509,12 @@ let
       sha256 =
         {
           x86_64-linux =
-            if cudaSupport then
+            if cudaSupport && mklSupport then
+              "sha256-SpS6mX4klW5Il5eXfTtYPeLRVEfs3wzmbBAjJ1A1Qxo="
+            else if cudaSupport then
               "sha256-5VFMNHeLrUxW5RTr6EhT3pay9nWJ5JkZTGirDds5QkU="
+            else if mklSupport then
+              "sha256-xBDUOs7aXzdi5hHJccxW2A3TE8B8F+23QkG26HnZsWs="
             else
               "sha256-KzgWV69Btr84FdwQ5JI2nQEsqiPg1/+TWdbw5bmxXOE=";
           aarch64-linux =
@@ -518,7 +526,7 @@ let
           aarch64-darwin = "sha256-WdgAaFZU+ePwWkVBhLzjlNT7ELfGHOTaMdafcAMD5yo=";
         }
         .${stdenv.hostPlatform.system} or (throw "unsupported system ${stdenv.hostPlatform.system}");
-    };
+    } // fetchAttrs;
 
     buildAttrs = {
       outputs = [
