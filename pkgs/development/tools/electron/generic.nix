@@ -87,10 +87,12 @@ let
     '';
 
     postFixup = ''
-      patchelf \
-        --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-        --set-rpath "${atomEnv.libPath}:${electronLibPath}:$out/lib/electron" \
-        $out/lib/electron/electron
+      for elf in $out/lib/electron/{electron,*crashpad_handler,chrome-sandbox}; do
+        patchelf \
+          --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
+          --set-rpath "${atomEnv.libPath}:${electronLibPath}:$out/lib/electron" \
+          $elf
+      done
 
       wrapProgram $out/lib/electron/electron \
         --prefix LD_PRELOAD : ${lib.makeLibraryPath [ libXScrnSaver ]}/libXss.so.1 \
