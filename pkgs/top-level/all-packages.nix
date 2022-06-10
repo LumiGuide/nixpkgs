@@ -17725,6 +17725,8 @@ with pkgs;
 
   inherit (callPackages ../development/tools/electron/binary { })
     electron-bin
+    electron_7-bin
+    electron_8-bin
     electron_9-bin
     electron_10-bin
     electron_11-bin
@@ -17744,6 +17746,8 @@ with pkgs;
     electron_25-bin;
 
   electron = electron-bin;
+  electron_7 = electron_7-bin;
+  electron_8 = electron_8-bin;
   electron_9 = electron_9-bin;
   electron_10 = electron_10-bin;
   electron_11 = electron_11-bin;
