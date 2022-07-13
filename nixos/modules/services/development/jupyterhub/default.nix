@@ -6,26 +6,28 @@ let
 
   cfg = config.services.jupyterhub;
 
+  settingsFormat = pkgs.formats.json { };
+
   kernels = (pkgs.jupyter-kernel.create  {
     definitions = if cfg.kernels != null
       then cfg.kernels
       else  pkgs.jupyter-kernel.default;
   });
 
+  configFileJSON = settingsFormat.generate "jupyterhub_config.json" cfg.settings;
+
   jupyterhubConfig = pkgs.writeText "jupyterhub_config.py" ''
-    c.JupyterHub.bind_url = "http://${cfg.host}:${toString cfg.port}"
-
-    c.JupyterHub.authenticator_class = "${cfg.authentication}"
-    c.JupyterHub.spawner_class = "${cfg.spawner}"
-
-    c.SystemdSpawner.default_url = '/lab'
-    c.SystemdSpawner.cmd = "${cfg.jupyterlabEnv}/bin/jupyterhub-singleuser"
-    c.SystemdSpawner.environment = {
-      'JUPYTER_PATH': '${kernels}'
-    }
+    import json
+    with open("${configFileJSON}") as f:
+      js = json.load(f)
+    for k,v in js.items():
+      sub = getattr(c, k)
+      for kk, vv in v.items():
+        setattr(sub, kk, vv)
 
     ${cfg.extraConfig}
   '';
+
 in {
   meta.maintainers = with maintainers; [ costrouc ];
 
@@ -51,6 +53,21 @@ in {
 
         There are many spawners available including: local process,
         systemd, docker, kubernetes, yarn, batch, etc.
+      '';
+    };
+
+    settings = mkOption {
+      type = types.attrsOf (types.attrsOf settingsFormat.type);
+      default = { };
+      example = literalExpression ''
+        {
+          SystemdSpawner.mem_limit = "8G";
+          SystemdSpawner.cpu_limit = 2.0;
+        }
+      '';
+      description = ''
+        Jupyterhub configuration settings. For settings that aren't
+        representable in JSON, use extraConfig.
       '';
     };
 
@@ -181,22 +198,29 @@ in {
     };
   };
 
-  config = mkMerge [
-    (mkIf cfg.enable  {
-      systemd.services.jupyterhub = {
-        description = "Jupyterhub development server";
+  config = mkIf cfg.enable {
+    services.jupyterhub.settings = {
+      JupyterHub.bind_url = "http://${cfg.host}:${toString cfg.port}";
+      JupyterHub.authenticator_class = cfg.authentication;
+      JupyterHub.spawner_class = cfg.spawner;
+      SystemdSpawner.default_url = "/lab";
+      SystemdSpawner.cmd = "${cfg.jupyterlabEnv}/bin/jupyterhub-singleuser";
+      SystemdSpawner.environment.JUPYTER_PATH = kernels;
+    };
 
-        after = [ "network.target" ];
-        wantedBy = [ "multi-user.target" ];
+    systemd.services.jupyterhub = {
+      description = "Jupyterhub development server";
 
-        serviceConfig = {
-          Restart = "always";
-          ExecStart = "${cfg.jupyterhubEnv}/bin/jupyterhub --config ${jupyterhubConfig}";
-          User = "root";
-          StateDirectory = cfg.stateDirectory;
-          WorkingDirectory = "/var/lib/${cfg.stateDirectory}";
-        };
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      serviceConfig = {
+        Restart = "always";
+        ExecStart = "${cfg.jupyterhubEnv}/bin/jupyterhub --config ${jupyterhubConfig}";
+        User = "root";
+        StateDirectory = cfg.stateDirectory;
+        WorkingDirectory = "/var/lib/${cfg.stateDirectory}";
       };
-    })
-  ];
+    };
+  };
 }
