@@ -487,6 +487,8 @@
   ./services/development/jupyter/default.nix
   ./services/development/jupyterhub/default.nix
   ./services/development/livebook.nix
+  ./services/development/mlflow/default.nix
+  ./services/development/rstudio-server/default.nix
   ./services/development/lorri.nix
   ./services/development/rstudio-server/default.nix
   ./services/development/zammad.nix
