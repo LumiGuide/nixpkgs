@@ -189,6 +189,13 @@ buildPythonPackage rec {
   # - Most (all ?) tests require internet access anyway.
   doCheck = false;
 
+  # Some mlflow subcommands like `mlflow server` run the gunicorn binary which
+  # in turn attempts to find the mlflow package again. Gunicorn does not have
+  # mlflow in its closure and won't find it unless we expose it here.
+  makeWrapperArgs = [
+    "--prefix PYTHONPATH : $PYTHONPATH"
+  ];
+
   meta = {
     description = "Open source platform for the machine learning lifecycle";
     mainProgram = "mlflow";
