@@ -21,6 +21,7 @@
   jinja2,
   markdown,
   matplotlib,
+  nixosTests,
   numpy,
   opentelemetry-api,
   opentelemetry-sdk,
@@ -196,6 +197,8 @@ buildPythonPackage rec {
   makeWrapperArgs = [
     "--prefix PYTHONPATH : $PYTHONPATH"
   ];
+
+  passthru.tests = { inherit (nixosTests) mlflow; };
 
   meta = {
     description = "Open source platform for the machine learning lifecycle";
