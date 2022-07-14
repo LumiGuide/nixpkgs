@@ -19,6 +19,7 @@
   matplotlib,
   mlflow-skinny,
   mlflow-tracing,
+  nixosTests,
   numpy,
   pandas,
   pyarrow,
@@ -80,6 +81,8 @@ buildPythonPackage (finalAttrs: {
   # - Many errors occur at collection time;
   # - Most (all ?) tests require internet access anyway.
   doCheck = false;
+
+  passthru.tests = { inherit (nixosTests) mlflow; };
 
   meta = {
     description = "Open source platform for the machine learning lifecycle";

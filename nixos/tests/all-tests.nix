@@ -995,6 +995,7 @@ in
   misskey = runTest ./misskey.nix;
   mitmproxy = runTest ./mitmproxy.nix;
   mjolnir = runTest ./matrix/mjolnir.nix;
+  mlflow = handleTest ./mlflow.nix {};
   mobilizon = runTest ./mobilizon.nix;
   mod_perl = runTest ./mod_perl.nix;
   modular-service-etc = runTest ./modular-service-etc/test.nix;
