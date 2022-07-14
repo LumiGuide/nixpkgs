@@ -612,6 +612,8 @@
   ./services/development/jupyterhub/default.nix
   ./services/development/labgrid/coordinator.nix
   ./services/development/livebook.nix
+  ./services/development/mlflow/default.nix
+  ./services/development/rstudio-server/default.nix
   ./services/development/lorri.nix
   ./services/development/nixseparatedebuginfod2.nix
   ./services/development/rstudio-server/default.nix
