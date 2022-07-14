@@ -74,6 +74,11 @@ buildPythonPackage rec {
     "mlflow"
   ];
 
+  # Some mlflow subcommands like `mlflow server` run the gunicorn binary which
+  # in turn attempts to find the mlflow package again. Gunicorn does not have
+  # mlflow in its closure and won't find it unless we expose it here.
+  makeWrapperArgs = ''--prefix PYTHONPATH ":" "$PYTHONPATH"'';
+
   # run into https://stackoverflow.com/questions/51203641/attributeerror-module-alembic-context-has-no-attribute-config
   # also, tests use conda so can't run on NixOS without buildFHSUserEnv
   doCheck = false;
