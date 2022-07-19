@@ -105,7 +105,9 @@ in {
   inherit toPythonModule toPythonApplication;
   inherit buildSetupcfg;
 
-  inherit (callPackage ../development/interpreters/python/hooks { })
+  inherit (callPackage ../development/interpreters/python/hooks {
+    findutils = pkgs.buildPackages.findutils;
+  })
     sphinxHook
     condaInstallHook
     condaUnpackHook
