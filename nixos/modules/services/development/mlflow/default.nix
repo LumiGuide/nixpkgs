@@ -102,6 +102,14 @@ in {
         The mlflow derivation to use.
       '';
     };
+
+    autoUpgrade = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Automatically upgrade the mlflow backend store to new schema versions.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -114,7 +122,9 @@ in {
         WorkingDirectory = "/var/lib/mlflow";
       };
 
-      script = ''
+      script = lib.optionalString cfg.autoUpgrade ''
+        mlflow db upgrade ${cfg.settings.backend-store-uri}
+      '' + ''
         mlflow server ${flags}
       '';
     };
