@@ -26,7 +26,7 @@ buildPythonPackage rec {
   preBuild = lib.optionalString
       ((python.isPy3k or false) && (python.pname != "pypy3"))
   ''
-    ${python.pythonForBuild}/bin/2to3 -wn nose functional_tests unit_tests
+    ${lib.optionalString (python.pythonForBuild != python) "${python.pythonForBuild}/bin/"}2to3 -wn nose functional_tests unit_tests
   '';
 
   propagatedBuildInputs = [ coverage ];
