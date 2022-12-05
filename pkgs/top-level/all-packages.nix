@@ -2714,6 +2714,8 @@ with pkgs;
     cudaPackages = cudaPackages_10_0;
   };
 
+  libtensorflow-cc = python3.pkgs.tensorflow.libtensorflow-cc;
+
   libtensorflow =
     if python3.pkgs.tensorflow ? libtensorflow
     then python3.pkgs.tensorflow.libtensorflow

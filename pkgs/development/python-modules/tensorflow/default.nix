@@ -357,11 +357,21 @@ let
 
     bazelFlags = lib.optionals (mklSupport) [ "--config=mkl" ];
 
-    bazelTarget = "//tensorflow/tools/pip_package:build_pip_package //tensorflow/tools/lib_package:libtensorflow";
+    bazelTarget = ''
+      //tensorflow:install_headers
+      //tensorflow:tensorflow_cc
+      //tensorflow:tensorflow
+      //tensorflow:tensorflow_framework
+      //tensorflow/tools/lib_package:libtensorflow
+      //tensorflow/tools/pip_package:build_pip_package
+    '';
 
     removeRulesCC = false;
     # Without this Bazel complaints about sandbox violations.
     dontAddBazelOpts = true;
+
+    # if enabled this will move all header files to the "out" attribute
+    moveToDev = false;
 
     fetchAttrs = {
       # cudaSupport causes fetch of ncclArchive, resulting in different hashes
@@ -378,7 +388,7 @@ let
     } // fetchAttrs;
 
     buildAttrs = {
-      outputs = [ "out" "python" ];
+      outputs = [ "out" "python" "cc" ];
 
       preBuild = ''
         patchShebangs .
@@ -397,6 +407,17 @@ let
         Libs: -L$out/lib -ltensorflow
         Cflags: -I$out/include/tensorflow
         EOF
+
+        mkdir -p "$cc/lib" "$cc/include"
+        cp -r bazel-bin/tensorflow/include/* "$cc/include/"
+        cp bazel-bin/tensorflow/libtensorflow.so* "$cc/lib"
+        cp bazel-bin/tensorflow/libtensorflow_cc.so* "$cc/lib"
+        cp bazel-bin/tensorflow/libtensorflow_framework.so* "$cc/lib"
+        # these symlinks already exist for the framework
+        ln -s "$cc/lib/libtensorflow.so.${version}" "$cc/lib/libtensorflow.so"
+        ln -s "$cc/lib/libtensorflow.so.${version}" "$cc/lib/libtensorflow.so.2"
+        ln -s "$cc/lib/libtensorflow_cc.so.${version}" "$cc/lib/libtensorflow_cc.so"
+        ln -s "$cc/lib/libtensorflow_cc.so.${version}" "$cc/lib/libtensorflow_cc.so.2"
 
         # build the source code, then copy it to $python (build_pip_package
         # actually builds a symlink farm so we must dereference them).
@@ -533,6 +554,7 @@ in buildPythonPackage {
     inherit cudaPackages;
     deps = bazel-build.deps;
     libtensorflow = bazel-build.out;
+    libtensorflow-cc = bazel-build.cc;
   };
 
   inherit (bazel-build) meta;
