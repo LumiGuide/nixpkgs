@@ -13,18 +13,23 @@
 , gorilla
 , gunicorn
 , importlib-metadata
+, markdown
+, matplotlib
 , nixosTests
 , numpy
 , packaging
 , pandas
 , prometheus-flask-exporter
 , protobuf
+, pyarrow
 , python-dateutil
 , pythonOlder
 , pyyaml
 , querystring_parser
 , requests
+, scikit-learn
 , scipy
+, shap
 , simplejson
 , six
 , sqlalchemy
@@ -33,14 +38,14 @@
 
 buildPythonPackage rec {
   pname = "mlflow";
-  version = "1.30.0";
+  version = "2.1.1";
   format = "setuptools";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-Ln1R9uLcbMIxbnLc9BNSF8WByPTx+d3hBmqrqeCyLHo=";
+    hash = "sha256-oRazzUW7+1CaFyO/1DiL21ZqPlBF483lOQ5mf1kUmKY=";
   };
 
   propagatedBuildInputs = [
@@ -55,16 +60,21 @@ buildPythonPackage rec {
     gorilla
     gunicorn
     importlib-metadata
+    markdown
+    matplotlib
     numpy
     packaging
     pandas
     prometheus-flask-exporter
     protobuf
+    pyarrow
     python-dateutil
     pyyaml
     querystring_parser
     requests
+    scikit-learn
     scipy
+    shap
     simplejson
     six
     sqlalchemy
