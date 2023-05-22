@@ -24,6 +24,8 @@
 , pyarrow
 , python-dateutil
 , pythonOlder
+, pythonRelaxDepsHook
+, pytz
 , pyyaml
 , querystring_parser
 , requests
@@ -31,22 +33,28 @@
 , scipy
 , shap
 , simplejson
-, six
 , sqlalchemy
 , sqlparse
 }:
 
 buildPythonPackage rec {
   pname = "mlflow";
-  version = "2.1.1";
+  version = "2.2.2";
   format = "setuptools";
 
   disabled = pythonOlder "3.8";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-oRazzUW7+1CaFyO/1DiL21ZqPlBF483lOQ5mf1kUmKY=";
+    hash = "sha256-PvLC7iDJp63t/zTnVsbtrGLPTZBXZa0OgHS8naoMWAw";
   };
+
+  # Remove currently broken dependency `shap`, a model explainability package.
+  # This seems quite unprincipled especially with tests not being enabled,
+  # but not mlflow has a 'skinny' install option which does not require `shap`.
+  nativeBuildInputs = [ pythonRelaxDepsHook ];
+  pythonRemoveDeps = [ "shap" ];
+  pythonRelaxDeps = [ "pytz" ];
 
   propagatedBuildInputs = [
     alembic
@@ -69,6 +77,7 @@ buildPythonPackage rec {
     protobuf
     pyarrow
     python-dateutil
+    pytz
     pyyaml
     querystring_parser
     requests
@@ -76,7 +85,6 @@ buildPythonPackage rec {
     scipy
     shap
     simplejson
-    six
     sqlalchemy
     sqlparse
   ];
@@ -85,11 +93,7 @@ buildPythonPackage rec {
     "mlflow"
   ];
 
-  # Some mlflow subcommands like `mlflow server` run the gunicorn binary which
-  # in turn attempts to find the mlflow package again. Gunicorn does not have
-  # mlflow in its closure and won't find it unless we expose it here.
-  makeWrapperArgs = ''--prefix PYTHONPATH ":" "$PYTHONPATH"'';
-
+  # no tests in PyPI dist
   # run into https://stackoverflow.com/questions/51203641/attributeerror-module-alembic-context-has-no-attribute-config
   # also, tests use conda so can't run on NixOS without buildFHSUserEnv
   doCheck = false;
@@ -101,9 +105,5 @@ buildPythonPackage rec {
     homepage = "https://github.com/mlflow/mlflow";
     license = licenses.asl20;
     maintainers = with maintainers; [ tbenst ];
-    knownVulnerabilities = [
-      "CVE-2023-1176"
-      "CVE-2023-1177"
-    ];
   };
 }
