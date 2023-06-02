@@ -60571,8 +60571,6 @@ self: {
        ];
        description = "Clash: a functional hardware description language - Prelude library";
        license = lib.licenses.bsd2;
-       hydraPlatforms = lib.platforms.none;
-       broken = true;
      }) {};
 
   "clash-prelude-hedgehog" = callPackage
