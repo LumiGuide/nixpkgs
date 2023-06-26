@@ -20,6 +20,11 @@ stdenv.mkDerivation (finalAttrs: {
     "man"
   ];
 
+  # Remove a test that runs out of memory on 32-bit platforms.
+  preConfigure = optionalString stdenv.hostPlatform.is32bit ''
+    sed -i '/1048576/d' test/alg-yescrypt.c
+  '';
+
   configureFlags = [
     "--enable-hashes=${enableHashes}"
     "--enable-obsolete-api=glibc"
