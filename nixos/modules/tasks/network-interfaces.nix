@@ -155,6 +155,12 @@ let
         description = lib.mdDoc "The default gateway metric/preference.";
       };
 
+      srcAddress = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = lib.mdDoc "The default source address for public connections.";
+      };
+
     };
 
   };
