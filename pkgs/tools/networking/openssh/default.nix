@@ -1,16 +1,14 @@
 { callPackage, lib, fetchurl, fetchpatch, fetchFromGitHub, autoreconfHook }:
-let
-  common = opts: callPackage (import ./common.nix opts) { };
-in
-{
+let common = opts: callPackage (import ./common.nix opts) { };
+in {
 
   openssh = common rec {
     pname = "openssh";
-    version = "9.3p2";
+    version = "9.8p1";
 
     src = fetchurl {
       url = "mirror://openbsd/OpenSSH/portable/openssh-${version}.tar.gz";
-      hash = "sha256-IA6+FH9ss/EB/QzfngJEKvfdyimN/9n0VoeOfMrGdug=";
+      hash = "sha256-3YvQAqN5tdSZ37BQ3R+pr4Ap6ARh9LtsUjxJlz9aOfM=";
     };
 
     extraPatches = [ ./ssh-keysign-8.5.patch ];
@@ -27,8 +25,10 @@ in
       hash = "sha256-IA6+FH9ss/EB/QzfngJEKvfdyimN/9n0VoeOfMrGdug=";
     };
 
-    extraPatches = let url = "https://raw.githubusercontent.com/freebsd/freebsd-ports/700625bcd86b74cf3fb9536aeea250d7f8cd1fd5/security/openssh-portable/files/extra-patch-hpn"; in
-    [
+    extraPatches = let
+      url =
+        "https://raw.githubusercontent.com/freebsd/freebsd-ports/700625bcd86b74cf3fb9536aeea250d7f8cd1fd5/security/openssh-portable/files/extra-patch-hpn";
+    in [
       ./ssh-keysign-8.5.patch
 
       # HPN Patch from FreeBSD ports
@@ -52,9 +52,7 @@ in
     extraNativeBuildInputs = [ autoreconfHook ];
 
     extraConfigureFlags = [ "--with-hpn" ];
-    extraMeta = {
-      maintainers = with lib.maintainers; [ abbe ];
-    };
+    extraMeta = { maintainers = with lib.maintainers; [ abbe ]; };
   };
 
   openssh_gssapi = common rec {
@@ -72,7 +70,8 @@ in
 
       (fetchpatch {
         name = "openssh-gssapi.patch";
-        url = "https://salsa.debian.org/ssh-team/openssh/raw/debian/1%25${version}-1/debian/patches/gssapi.patch";
+        url =
+          "https://salsa.debian.org/ssh-team/openssh/raw/debian/1%25${version}-1/debian/patches/gssapi.patch";
         sha256 = "sha256-VG7+2dfu09nvHWuSAB6sLGMmjRCDCysl/9FR1WSF21k=";
       })
     ];
