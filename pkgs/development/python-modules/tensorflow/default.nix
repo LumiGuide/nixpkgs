@@ -680,9 +680,8 @@ buildPythonPackage {
 
   postFixup = lib.optionalString cudaSupport ''
     find $out -type f \( -name '*.so' -or -name '*.so.*' \) | while read lib; do
-      addDriverRunpath "$lib"
-
       patchelf --set-rpath "${cudatoolkit}/lib:${cudatoolkit.lib}/lib:${cudnnMerged}/lib:${lib.getLib nccl}/lib:$(patchelf --print-rpath "$lib")" "$lib"
+      addDriverRunpath "$lib"
     done
   '';
 
