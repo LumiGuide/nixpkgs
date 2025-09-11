@@ -3,7 +3,9 @@
   stdenvNoCC,
   dockerTools,
   makeBinaryWrapper,
-  jdk21_headless,
+  # youtrack requires jdk, not jdk-headless for some features like generating excel reports.
+  # If you don't need those features, you can override it with jdk = jdk_headless instead.
+  jdk21,
   gawk,
   statePath ? "/var/lib/youtrack",
 }:
@@ -38,7 +40,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     cp -r opt/youtrack/* $out
     makeWrapper $out/bin/youtrack.sh $out/bin/youtrack \
       --prefix PATH : "${lib.makeBinPath [ gawk ]}" \
-      --set JRE_HOME ${jdk21_headless}
+      --set JRE_HOME ${jdk21}
     rm -rf $out/internal/java
     mv $out/conf $out/conf.orig
     rmdir $out/{backups,data,logs,temp}
