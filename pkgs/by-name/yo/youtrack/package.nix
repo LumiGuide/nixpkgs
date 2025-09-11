@@ -1,4 +1,6 @@
-{ lib, stdenvNoCC, fetchzip, makeBinaryWrapper, jdk21_headless, gawk, statePath ? "/var/lib/youtrack" }:
+# youtrack requires jdk, not jdk-headless for some features like generating excel reports.
+# If you don't need those features, you can override it with jdk = jdk_headless instead.
+{ lib, stdenvNoCC, fetchzip, makeBinaryWrapper, jdk21, gawk, statePath ? "/var/lib/youtrack" }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "youtrack";
@@ -20,7 +22,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     cp -r * $out
     makeWrapper $out/bin/youtrack.sh $out/bin/youtrack \
       --prefix PATH : "${lib.makeBinPath [ gawk ]}" \
-      --set JRE_HOME ${jdk21_headless}
+      --set JRE_HOME ${jdk21}
     rm -rf $out/internal/java
     mv $out/conf $out/conf.orig
     ln -s ${statePath}/backups $out/backups
