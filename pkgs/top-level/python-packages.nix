@@ -11084,6 +11084,8 @@ self: super: with self; {
 
   onnxruntime-tools = callPackage ../development/python-modules/onnxruntime-tools { };
 
+  onnxscript = callPackage ../development/python-modules/onnxscript { };
+
   onnxslim = callPackage ../development/python-modules/onnxslim { };
 
   onvif-zeep = callPackage ../development/python-modules/onvif-zeep { };
