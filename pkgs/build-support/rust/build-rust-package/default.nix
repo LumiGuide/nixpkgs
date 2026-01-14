@@ -177,7 +177,7 @@ lib.extendMkDerivation {
       meta = meta // {
         badPlatforms = meta.badPlatforms or [ ] ++ rustc.badTargetPlatforms;
         # default to Rust's platforms
-        platforms = lib.intersectLists meta.platforms or lib.platforms.all rustc.targetPlatforms;
+        platforms = meta.platforms or rustc.targetPlatforms;
       };
     };
 }
