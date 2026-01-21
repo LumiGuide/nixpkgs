@@ -16,9 +16,11 @@
   docker,
   fastapi,
   flask,
+  flask-cors,
   gitpython,
   graphene,
   gunicorn,
+  huey,
   importlib-metadata,
   jinja2,
   markdown,
@@ -26,11 +28,13 @@
   nixosTests,
   numpy,
   opentelemetry-api,
+  opentelemetry-proto,
   opentelemetry-sdk,
   packaging,
   pandas,
   protobuf,
   pyarrow,
+  python-dotenv,
   pyyaml,
   requests,
   scikit-learn,
@@ -73,14 +77,14 @@
 
 buildPythonPackage rec {
   pname = "mlflow";
-  version = "3.3.1";
+  version = "3.8.1";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "mlflow";
     repo = "mlflow";
     tag = "v${version}";
-    hash = "sha256-5zObSnGx7+cCrqRfvcnprQN05NqVBCeWcAZEE1Jpeuo=";
+    hash = "sha256-QjRFQRShVjTnCN7/+LJ0iiB/h0+P4GJJV4RaviQdS2U=";
   };
 
   pythonRelaxDeps = [
@@ -105,21 +109,25 @@ buildPythonPackage rec {
     docker
     fastapi
     flask
+    flask-cors
     gitpython
     graphene
     gunicorn
+    huey
     importlib-metadata
     jinja2
     markdown
     matplotlib
     numpy
     opentelemetry-api
+    opentelemetry-proto
     opentelemetry-sdk
     packaging
     pandas
     protobuf
     pyarrow
     pydantic
+    python-dotenv
     pyyaml
     requests
     scikit-learn
