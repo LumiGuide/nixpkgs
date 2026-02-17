@@ -21,7 +21,7 @@
   tqdm,
 }:
 
-buildPythonPackage (finalAttrs: {
+buildPythonPackage rec {
   pname = "onnx-ir";
   version = "0.1.14_1";
   pyproject = true;
@@ -29,7 +29,7 @@ buildPythonPackage (finalAttrs: {
   src = fetchFromGitHub {
     owner = "onnx";
     repo = "ir-py";
-    tag = "v${finalAttrs.version}";
+    tag = "v${version}";
     hash = "sha256-mlUz5LGMtW4q78lBcbjo96V7k6NL+mt1lSvOU/6GEOY=";
   };
 
@@ -80,8 +80,8 @@ buildPythonPackage (finalAttrs: {
   meta = {
     description = "Efficient in-memory representation for ONNX, in Python";
     homepage = "https://github.com/onnx/ir-py";
-    changelog = "https://github.com/onnx/ir-py/releases/tag/${finalAttrs.src.tag}";
+    changelog = "https://github.com/onnx/ir-py/releases/tag/${src.tag}";
     license = lib.licenses.asl20;
     maintainers = with lib.maintainers; [ GaetanLepage ];
   };
-})
+}

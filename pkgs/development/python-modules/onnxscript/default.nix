@@ -34,7 +34,7 @@ let
   # The following tests are disabled in both
   # - the main derivation (running without GPU access)
   # - passthru.gpuCheck (running with GPU passthrough)
-  disabledTests = [
+  commonDisabledTests = [
     # fixture 'model_info' not found
     "test_model"
 
@@ -187,7 +187,7 @@ let
     "test_transpose_b_matmul_add_to_gemm"
   ];
 in
-buildPythonPackage (finalAttrs: {
+buildPythonPackage rec {
   pname = "onnxscript";
   version = "0.5.7";
   pyproject = true;
@@ -195,7 +195,7 @@ buildPythonPackage (finalAttrs: {
   src = fetchFromGitHub {
     owner = "microsoft";
     repo = "onnxscript";
-    tag = "v${finalAttrs.version}";
+    tag = "v${version}";
     hash = "sha256-8QnVfdI5sfPXF72fbbowbGxVRAnNQr55YEi/QEmXbCw=";
   };
 
@@ -239,7 +239,7 @@ buildPythonPackage (finalAttrs: {
     tqdm
   ];
 
-  disabledTests = disabledTests ++ lib.optionals cudaSupport testsRequiringGpu;
+  disabledTests = commonDisabledTests ++ lib.optionals cudaSupport testsRequiringGpu;
 
   disabledTestPaths = [
     # google.protobuf.message.DecodeError: Error parsing message with type 'onnx.ModelProto'
@@ -258,7 +258,7 @@ buildPythonPackage (finalAttrs: {
 
     # Skip all tests that are failing independantly of the GPU availability
     disabledTests =
-      disabledTests
+      commonDisabledTests
       ++ [
         # AssertionError: Tensor-likes are not close!
         "test_output_match_opinfo__cumsum_cuda_float16"
@@ -327,8 +327,8 @@ buildPythonPackage (finalAttrs: {
   meta = {
     description = "Naturally author ONNX functions and models using a subset of Python";
     homepage = "https://github.com/microsoft/onnxscript";
-    changelog = "https://github.com/microsoft/onnxscript/releases/tag/${finalAttrs.src.tag}";
+    changelog = "https://github.com/microsoft/onnxscript/releases/tag/${src.tag}";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ GaetanLepage ];
   };
-})
+}
