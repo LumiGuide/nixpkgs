@@ -69,6 +69,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/Lightning-AI/pytorch-lightning";
     changelog = "https://github.com/Lightning-AI/pytorch-lightning/releases/tag/${src.tag}";
     license = lib.licenses.asl20;
-    maintainers = with lib.maintainers; [ tbenst ];
+    maintainers = [ ];
   };
 }

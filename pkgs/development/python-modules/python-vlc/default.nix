@@ -37,6 +37,6 @@ buildPythonPackage rec {
     description = "Python bindings for VLC, the cross-platform multimedia player and framework";
     homepage = "https://wiki.videolan.org/PythonBinding";
     license = lib.licenses.lgpl21Plus;
-    maintainers = with lib.maintainers; [ tbenst ];
+    maintainers = [ ];
   };
 }
