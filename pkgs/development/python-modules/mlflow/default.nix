@@ -3,6 +3,12 @@
   buildPythonPackage,
   fetchFromGitHub,
 
+  # frontend
+  enableFrontend ? true,
+  nodejs,
+  stdenvNoCC,
+  yarn-berry,
+
   # build-system
   setuptools,
 
@@ -75,10 +81,8 @@
   xgboost,
 }:
 
-buildPythonPackage rec {
-  pname = "mlflow";
+let
   version = "3.8.1";
-  pyproject = true;
 
   src = fetchFromGitHub {
     owner = "mlflow";
@@ -87,136 +91,175 @@ buildPythonPackage rec {
     hash = "sha256-QjRFQRShVjTnCN7/+LJ0iiB/h0+P4GJJV4RaviQdS2U=";
   };
 
-  pythonRelaxDeps = [
-    "cryptography"
-    "gunicorn"
-    "importlib-metadata"
-    "packaging"
-    "protobuf"
-    "pytz"
-    "pyarrow"
-  ];
+  frontend = stdenvNoCC.mkDerivation (finalAttrs: {
+    name = "mlflow-frontend";
+    src = "${src}/mlflow/server/js";
 
-  build-system = [ setuptools ];
+    nativeBuildInputs = [
+      nodejs
+      yarn-berry
+      yarn-berry.yarnBerryConfigHook
+    ];
 
-  dependencies = [
-    alembic
-    cachetools
-    click
-    cloudpickle
-    cryptography
-    databricks-sdk
-    docker
-    fastapi
-    flask
-    flask-cors
-    gitpython
-    graphene
-    gunicorn
-    huey
-    importlib-metadata
-    jinja2
-    markdown
-    matplotlib
-    numpy
-    opentelemetry-api
-    opentelemetry-proto
-    opentelemetry-sdk
-    packaging
-    pandas
-    protobuf
-    pyarrow
-    pydantic
-    python-dotenv
-    pyyaml
-    requests
-    scikit-learn
-    scipy
-    shap
-    sqlalchemy
-    sqlparse
-    uvicorn
-  ];
+    missingHashes = ./missing-hashes.json;
+    yarnOfflineCache = yarn-berry.fetchYarnBerryDeps {
+      inherit (finalAttrs) src missingHashes;
+      hash = "sha256-bW+JKk3JcC7RueYIgvzJU8pPR7+VtC8nwjgL7Y6FZjk=";
+    };
 
-  pythonImportsCheck = [ "mlflow" ];
+    buildPhase = ''
+      yarn run build
+    '';
 
-  nativeCheckInputs = [
-    aiohttp
-    azure-core
-    azure-storage-blob
-    azure-storage-file
-    boto3
-    botocore
-    catboost
-    datasets
-    google-cloud-storage
-    httpx
-    jwt
-    keras
-    langchain
-    librosa
-    moto
-    opentelemetry-exporter-otlp
-    optuna
-    pydantic
-    pyspark
-    pytestCheckHook
-    pytorch-lightning
-    sentence-transformers
-    starlette
-    statsmodels
-    tensorflow
-    torch
-    transformers
-    uvicorn
-    xgboost
-  ];
+    installPhase = ''
+      cp -r build $out
+    '';
+  });
 
-  disabledTestPaths = [
-    # Requires unpackaged `autogen`
-    "tests/autogen/test_autogen_autolog.py"
+in
+buildPythonPackage (
+  {
+    pname = "mlflow";
+    inherit src version;
+    pyproject = true;
 
-    # Requires unpackaged `diviner`
-    "tests/diviner/test_diviner_model_export.py"
+    pythonRelaxDeps = [
+      "cryptography"
+      "gunicorn"
+      "importlib-metadata"
+      "packaging"
+      "protobuf"
+      "pytz"
+      "pyarrow"
+    ];
 
-    # Requires unpackaged `sktime`
-    "examples/sktime/test_sktime_model_export.py"
+    build-system = [ setuptools ];
 
-    # Requires `fastai` which would cause a circular dependency
-    "tests/fastai/test_fastai_autolog.py"
-    "tests/fastai/test_fastai_model_export.py"
+    dependencies = [
+      alembic
+      cachetools
+      click
+      cloudpickle
+      cryptography
+      databricks-sdk
+      docker
+      fastapi
+      flask
+      flask-cors
+      gitpython
+      graphene
+      gunicorn
+      huey
+      importlib-metadata
+      jinja2
+      markdown
+      matplotlib
+      numpy
+      opentelemetry-api
+      opentelemetry-proto
+      opentelemetry-sdk
+      packaging
+      pandas
+      protobuf
+      pyarrow
+      pydantic
+      python-dotenv
+      pyyaml
+      requests
+      scikit-learn
+      scipy
+      shap
+      sqlalchemy
+      sqlparse
+      uvicorn
+    ];
 
-    # Requires `spacy` which would cause a circular dependency
-    "tests/spacy/test_spacy_model_export.py"
+    pythonImportsCheck = [ "mlflow" ];
 
-    # Requires `tensorflow.keras` which is not included in our outdated version of `tensorflow` (2.13.0)
-    "tests/gateway/providers/test_ai21labs.py"
-    "tests/tensorflow/test_keras_model_export.py"
-    "tests/tensorflow/test_keras_pyfunc_model_works_with_all_input_types.py"
-    "tests/tensorflow/test_mlflow_callback.py"
-  ];
+    nativeCheckInputs = [
+      aiohttp
+      azure-core
+      azure-storage-blob
+      azure-storage-file
+      boto3
+      botocore
+      catboost
+      datasets
+      google-cloud-storage
+      httpx
+      jwt
+      keras
+      langchain
+      librosa
+      moto
+      opentelemetry-exporter-otlp
+      optuna
+      pydantic
+      pyspark
+      pytestCheckHook
+      pytorch-lightning
+      sentence-transformers
+      starlette
+      statsmodels
+      tensorflow
+      torch
+      transformers
+      uvicorn
+      xgboost
+    ];
 
-  # I (@GaetanLepage) gave up at enabling tests:
-  # - They require a lot of dependencies (some unpackaged);
-  # - Many errors occur at collection time;
-  # - Most (all ?) tests require internet access anyway.
-  doCheck = false;
+    disabledTestPaths = [
+      # Requires unpackaged `autogen`
+      "tests/autogen/test_autogen_autolog.py"
 
-  # Some mlflow subcommands like `mlflow server` run the gunicorn binary which
-  # in turn attempts to find the mlflow package again. Gunicorn does not have
-  # mlflow in its closure and won't find it unless we expose it here.
-  makeWrapperArgs = [
-    "--prefix PYTHONPATH : $PYTHONPATH"
-  ];
+      # Requires unpackaged `diviner`
+      "tests/diviner/test_diviner_model_export.py"
 
-  passthru.tests = { inherit (nixosTests) mlflow; };
+      # Requires unpackaged `sktime`
+      "examples/sktime/test_sktime_model_export.py"
 
-  meta = {
-    description = "Open source platform for the machine learning lifecycle";
-    mainProgram = "mlflow";
-    homepage = "https://github.com/mlflow/mlflow";
-    changelog = "https://github.com/mlflow/mlflow/blob/${src.tag}/CHANGELOG.md";
-    license = lib.licenses.asl20;
-    maintainers = [ ];
-  };
-}
+      # Requires `fastai` which would cause a circular dependency
+      "tests/fastai/test_fastai_autolog.py"
+      "tests/fastai/test_fastai_model_export.py"
+
+      # Requires `spacy` which would cause a circular dependency
+      "tests/spacy/test_spacy_model_export.py"
+
+      # Requires `tensorflow.keras` which is not included in our outdated version of `tensorflow` (2.13.0)
+      "tests/gateway/providers/test_ai21labs.py"
+      "tests/tensorflow/test_keras_model_export.py"
+      "tests/tensorflow/test_keras_pyfunc_model_works_with_all_input_types.py"
+      "tests/tensorflow/test_mlflow_callback.py"
+    ];
+
+    # I (@GaetanLepage) gave up at enabling tests:
+    # - They require a lot of dependencies (some unpackaged);
+    # - Many errors occur at collection time;
+    # - Most (all ?) tests require internet access anyway.
+    doCheck = false;
+
+    # Some mlflow subcommands like `mlflow server` run the gunicorn binary which
+    # in turn attempts to find the mlflow package again. Gunicorn does not have
+    # mlflow in its closure and won't find it unless we expose it here.
+    makeWrapperArgs = [
+      "--prefix PYTHONPATH : $PYTHONPATH"
+    ];
+
+    passthru.tests = { inherit (nixosTests) mlflow; };
+
+    meta = {
+      description = "Open source platform for the machine learning lifecycle";
+      mainProgram = "mlflow";
+      homepage = "https://github.com/mlflow/mlflow";
+      changelog = "https://github.com/mlflow/mlflow/blob/${src.tag}/CHANGELOG.md";
+      license = lib.licenses.asl20;
+      maintainers = [ ];
+    };
+  }
+  // lib.optionalAttrs enableFrontend {
+    inherit frontend;
+    preBuild = ''
+      ln -s $frontend mlflow/server/js/build
+    '';
+  }
+)
