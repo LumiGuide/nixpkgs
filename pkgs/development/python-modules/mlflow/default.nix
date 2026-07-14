@@ -6,24 +6,42 @@
   # dependencies
   aiohttp,
   alembic,
+  cachetools,
+  click,
+  cloudpickle,
   cryptography,
+  databricks-sdk,
   docker,
+  fastapi,
   flask,
   flask-cors,
+  gitpython,
   graphene,
   gunicorn,
   huey,
+  importlib-metadata,
   matplotlib,
-  mlflow-skinny,
-  mlflow-tracing,
   nixosTests,
   numpy,
+  opentelemetry-api,
+  opentelemetry-proto,
+  opentelemetry-sdk,
+  packaging,
   pandas,
+  protobuf,
   pyarrow,
+  pydantic,
+  python-dotenv,
+  pyyaml,
+  requests,
   scikit-learn,
   scipy,
   skops,
   sqlalchemy,
+  sqlparse,
+  starlette,
+  typing-extensions,
+  uvicorn,
 }:
 
 buildPythonPackage (finalAttrs: {
@@ -55,26 +73,49 @@ buildPythonPackage (finalAttrs: {
     "cryptography"
   ];
 
+  pythonRemoveDeps = [
+    "mlflow-skinny"
+    "mlflow-tracing"
+  ];
+
   dependencies = [
     aiohttp
     alembic
+    cachetools
+    click
+    cloudpickle
     cryptography
+    databricks-sdk
     docker
+    fastapi
     flask
     flask-cors
+    gitpython
     graphene
     gunicorn
     huey
+    importlib-metadata
     matplotlib
-    mlflow-skinny
-    mlflow-tracing
     numpy
+    opentelemetry-api
+    opentelemetry-proto
+    opentelemetry-sdk
+    packaging
     pandas
+    protobuf
     pyarrow
+    pydantic
+    python-dotenv
+    pyyaml
+    requests
     scikit-learn
     scipy
     skops
     sqlalchemy
+    sqlparse
+    starlette
+    typing-extensions
+    uvicorn
   ];
 
   pythonImportsCheck = [ "mlflow" ];
